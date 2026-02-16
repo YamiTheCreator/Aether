@@ -11,28 +11,16 @@
 *.userprefs
  
 # Build results
-/src/**/[Dd]ebug/
-/src/**/[Dd]ebugPublic/
-/src/**/[Rr]elease/
-/src/**/[Rr]eleases/
-/src/**/x64/
-/src/**/x86/
-/src/**/bld/
-/src/**/[Bb]in/
-/src/**/[Oo]bj/
-/src/**/[Ll]og/
- 
-# Build results
-/tests/**/[Dd]ebug/
-/tests/**/[Dd]ebugPublic/
-/tests/**/[Rr]elease/
-/tests/**/[Rr]eleases/
-/tests/**/x64/
-/tests/**/x86/
-/tests/**/bld/
-/tests/**/[Bb]in/
-/tests/**/[Oo]bj/
-/tests/**/[Ll]og/
+**/[Dd]ebug/
+**/[Dd]ebugPublic/
+**/[Rr]elease/
+**/[Rr]eleases/
+**/x64/
+**/x86/
+**/bld/
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
  
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -40,16 +28,16 @@
 #wwwroot/
  
 # MSTest test Results
-/src/**/[Tt]est[Rr]esult*/
-/src/**/[Bb]uild[Ll]og.*
+**/[Tt]est[Rr]esult*/
+**/[Bb]uild[Ll]og.*
  
 # NUNIT
 *.VisualState.xml
 TestResult.xml
  
 # Build Results of an ATL Project
-/src/**/[Dd]ebugPS/
-/src/**/[Rr]eleasePS/
+**/[Dd]ebugPS/
+**/[Rr]eleasePS/
 dlldata.c
  
 # DNX
@@ -292,3 +280,7 @@ pub/
 .docker/
 .vscode/
 .dockerignore
+
+# macOS
+.DS_Store
+**/.DS_Store

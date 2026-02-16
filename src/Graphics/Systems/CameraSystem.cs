@@ -17,8 +17,8 @@ public class CameraSystem : SystemBase
             ref Camera camera = ref World.Get<Camera>( entity );
             ref Transform transform = ref World.Get<Transform>( entity );
 
-            // Update camera vectors based on yaw and pitch
-            UpdateCameraVectors( ref camera );
+            // Update transform rotation based on yaw and pitch
+            UpdateCameraRotation( ref camera, ref transform );
 
             // Determine camera position (static or from transform)
             Vector3 cameraPosition = camera.IsStatic ? camera.StaticPosition : transform.Position;
@@ -26,11 +26,11 @@ public class CameraSystem : SystemBase
             // Update projection matrix
             if ( camera.ProjectionType == ProjectionType.Perspective )
             {
-                // 3D Perspective: use LookAt view matrix
+                // 3D Perspective: use LookAt view matrix with Transform vectors
                 camera.ViewMatrix = CoordinateHelper.WorldToView(
                     cameraPosition,
-                    cameraPosition + camera.Front,
-                    camera.Up
+                    cameraPosition + transform.Forward,
+                    transform.Up
                 );
 
                 camera.ProjectionMatrix = CoordinateHelper.ViewToClipPerspective(
@@ -72,22 +72,22 @@ public class CameraSystem : SystemBase
         switch ( direction )
         {
             case CameraMovement.Forward:
-                movement = camera.Front * velocity;
+                movement = transform.Forward * velocity;
                 break;
             case CameraMovement.Backward:
-                movement = -camera.Front * velocity;
+                movement = -transform.Forward * velocity;
                 break;
             case CameraMovement.Left:
-                movement = -camera.Right * velocity;
+                movement = -transform.Right * velocity;
                 break;
             case CameraMovement.Right:
-                movement = camera.Right * velocity;
+                movement = transform.Right * velocity;
                 break;
             case CameraMovement.Up:
-                movement = camera.Up * velocity;
+                movement = transform.Up * velocity;
                 break;
             case CameraMovement.Down:
-                movement = -camera.Up * velocity;
+                movement = -transform.Up * velocity;
                 break;
         }
 
@@ -101,7 +101,7 @@ public class CameraSystem : SystemBase
         }
     }
 
-    public void ProcessMouseMovement( ref Camera camera, float xOffset, float yOffset, bool constrainPitch = true )
+    public void ProcessMouseMovement( ref Camera camera, ref Transform transform, float xOffset, float yOffset, bool constrainPitch = true )
     {
         xOffset *= camera.MouseSensitivity;
         yOffset *= camera.MouseSensitivity;
@@ -114,7 +114,7 @@ public class CameraSystem : SystemBase
             camera.Pitch = Math.Clamp( camera.Pitch, -89.0f, 89.0f );
         }
 
-        UpdateCameraVectors( ref camera );
+        UpdateCameraRotation( ref camera, ref transform );
     }
 
     public void ProcessMouseScroll( ref Camera camera, float yOffset )
@@ -131,18 +131,15 @@ public class CameraSystem : SystemBase
         }
     }
 
-    private static void UpdateCameraVectors( ref Camera camera )
+    private static void UpdateCameraRotation( ref Camera camera, ref Transform transform )
     {
         float yawRad = MathExtensions.DegToRad( camera.Yaw );
         float pitchRad = MathExtensions.DegToRad( camera.Pitch );
 
-        Vector3 front;
-        front.X = ( float )( Math.Cos( yawRad ) * Math.Cos( pitchRad ) );
-        front.Y = ( float )Math.Sin( pitchRad );
-        front.Z = ( float )( Math.Sin( yawRad ) * Math.Cos( pitchRad ) );
-
-        camera.Front = Vector3.Normalize( front );
-        camera.Right = Vector3.Normalize( Vector3.Cross( camera.Front, camera.WorldUp ) );
-        camera.Up = Vector3.Normalize( Vector3.Cross( camera.Right, camera.Front ) );
+        // Create rotation quaternion from yaw and pitch
+        Quaternion yawRotation = Quaternion.CreateFromAxisAngle( Vector3.UnitY, yawRad );
+        Quaternion pitchRotation = Quaternion.CreateFromAxisAngle( Vector3.UnitX, pitchRad );
+        
+        transform.Rotation = yawRotation * pitchRotation;
     }
 }

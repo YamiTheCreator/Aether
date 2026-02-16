@@ -19,7 +19,7 @@ public struct Camera() : IComponent
     public float NearPlane { get; set; } = 0.1f;
     public float FarPlane { get; set; } = 100.0f;
 
-    // Camera orientation
+    // Camera orientation (for mouse control)
     public float Yaw { get; set; } = -90.0f;
     public float Pitch { get; set; } = 0.0f;
 
@@ -31,11 +31,6 @@ public struct Camera() : IComponent
     public bool IsStatic { get; set; } = false;
 
     public Vector3 StaticPosition { get; set; } = Vector3.Zero;
-
-    // Cached vectors
-    public Vector3 Front { get; set; } = -Vector3.UnitZ;
-    public Vector3 Right { get; set; } = Vector3.UnitX;
-    public Vector3 Up { get; set; } = Vector3.UnitY;
     public Vector3 WorldUp { get; set; } = Vector3.UnitY;
 
     // Cached matrices

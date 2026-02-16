@@ -1,6 +1,5 @@
 <Solution>
     <Folder Name="/examples/">
-        <Project Path="examples/PhysicsSimulation/PhysicsSimulation.csproj" />
         <Project Path="examples/Tetris/Tetris.csproj" />
         <Project Path="examples/ColorLines/ColorLines.csproj" />
         <Project Path="examples/GameUtils/GameUtils.csproj" />
