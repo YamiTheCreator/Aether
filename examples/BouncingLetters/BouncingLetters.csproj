@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RootNamespace>BouncingLetters</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Core\Core.csproj" />
+        <ProjectReference Include="..\..\src\Graphics\Graphics.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="obj\BouncingLetters.csproj.nuget.dgspec.json" />
+      <Content Include="obj\BouncingLetters.csproj.nuget.g.props" />
+      <Content Include="obj\BouncingLetters.csproj.nuget.g.targets" />
+      <Content Include="obj\BouncingNSP.csproj.nuget.dgspec.json" />
+      <Content Include="obj\BouncingNSP.csproj.nuget.g.props" />
+      <Content Include="obj\BouncingNSP.csproj.nuget.g.targets" />
+      <Content Include="obj\Debug\net10.0\Bouncing.946B5AD5.Up2Date" />
+      <Content Include="obj\Debug\net10.0\Bouncing.F3F54B30.Up2Date" />
+      <Content Include="obj\Debug\net10.0\BouncingLetters.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Debug\net10.0\BouncingLetters.sourcelink.json" />
+      <Content Include="obj\Debug\net10.0\BouncingNSP.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Debug\net10.0\BouncingNSP.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Content Include="obj\Debug\net10.0\BouncingNSP.sourcelink.json" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\rider.project.model.nuget.info" />
+      <Content Include="obj\rider.project.restore.info" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="obj\Debug\net10.0\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Debug\net10.0\BouncingNSP.AssemblyInfo.cs" />
+      <Compile Include="obj\Debug\net10.0\BouncingNSP.GlobalUsings.g.cs" />
+    </ItemGroup>
+
+</Project>

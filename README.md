@@ -1,2 +1,3 @@
-# Aether
-Aether is an opensource lightweight perfomance framework using C# + OpenGL for computer graphics
+Aether — это проект, созданный для выполнения заданий по cg на C# с ECS архитектурой и OpenGL
+реализацией через Silk.NET.
+

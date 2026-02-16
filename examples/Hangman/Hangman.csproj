@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Core\Core.csproj"/>
+        <ProjectReference Include="..\..\src\Graphics\Graphics.csproj"/>
+        <ProjectReference Include="..\..\src\UI\UI.csproj"/>
+        <ProjectReference Include="..\GameUtils\GameUtils.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\src\UI\Assets\**\*.*">
+            <Link>Assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Remove="..\..\src\UI\Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="obj\Debug\net10.0\Hangman.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Debug\net10.0\Hangman.csproj.Up2Date" />
+      <Content Include="obj\Debug\net10.0\Hangman.dll" />
+      <Content Include="obj\Debug\net10.0\Hangman.sourcelink.json" />
+      <Content Include="obj\Hangman.csproj.nuget.dgspec.json" />
+      <Content Include="obj\Hangman.csproj.nuget.g.props" />
+      <Content Include="obj\Hangman.csproj.nuget.g.targets" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\rider.project.model.nuget.info" />
+      <Content Include="obj\rider.project.restore.info" />
+    </ItemGroup>
+
+</Project>
