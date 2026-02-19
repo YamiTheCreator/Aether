@@ -1,20 +1,23 @@
 using System.Numerics;
 using Aether.Core;
+using Silk.NET.Maths;
 
 namespace Graphics.Components;
 
-public struct Transform( Vector3 position ) : IComponent
+public struct Transform( Vector3D<float> position, Quaternion<float> rotation, Vector3D<float> scale )
+    : Component
 {
-    public Vector3 Position = position;
-    public Quaternion Rotation = Quaternion.Identity;
-    public Vector3 Scale = Vector3.One;
+    public Vector3D<float> Position = position;
+    public Quaternion<float> Rotation = rotation;
+    public Vector3D<float> Scale = scale;
 
-    public Matrix4x4 WorldMatrix =>
-        Matrix4x4.CreateScale( Scale ) *
-        Matrix4x4.CreateFromQuaternion( Rotation ) *
-        Matrix4x4.CreateTranslation( Position );
+    public bool IsDirty;
 
-    public readonly Vector3 Forward => Vector3.Transform( -Vector3.UnitZ, Rotation );
-    public readonly Vector3 Right => Vector3.Transform( Vector3.UnitX, Rotation );
-    public readonly Vector3 Up => Vector3.Transform( Vector3.UnitY, Rotation );
+    public Matrix4X4<float> CachedMatrix;
+
+    public Vector3D<float> Forward;
+    public Vector3D<float> Right;
+    public Vector3D<float> Up;
+
+    public Transform( Vector3D<float> position ) : this( position, Quaternion<float>.Identity, Vector3D<float>.Zero ) { }
 }

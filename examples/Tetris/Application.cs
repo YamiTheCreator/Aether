@@ -1,12 +1,9 @@
-using System.Numerics;
+using Silk.NET.Maths;
 using Aether.Core;
 using Aether.Core.Enums;
 using Graphics;
 using Graphics.Components;
-using Graphics.Shaders;
 using Graphics.Systems;
-using Graphics.Text;
-using Graphics.Windowing;
 using Tetris.Systems;
 
 namespace Tetris;
@@ -15,40 +12,42 @@ public class Application() : ApplicationBase(
     title: "Tetris",
     width: 800,
     height: 660,
-    createDefaultCamera: true )
+    createDefaultCamera: true)
 {
     protected override void OnInitialize()
     {
-        MainWindow.SetResizable( false );
+        WindowBase.SetResizable(false);
 
         Renderer2D renderer = new();
-        Shader shader = new( MainWindow.Gl );
-        Font font = new( MainWindow.Gl, fontSize: 32f );
+        ShaderSystem shaderSystem = new(WindowBase.Gl);
+        FontSystem fontSystem = new(WindowBase.Gl);
+        TextureSystem textureSystem = new(WindowBase.Gl);
 
-        World.SetGlobal( renderer );
-        World.SetGlobal( shader );
-        World.SetGlobal( font );
+        Shader shader = shaderSystem.CreateShader();
+        Font font = fontSystem.CreateFont(fontSize: 32f);
 
-        GameState gameState = new()
+        World.SetGlobal(renderer);
+        World.SetGlobal(shaderSystem);
+        World.SetGlobal(fontSystem);
+        World.SetGlobal(textureSystem);
+        World.SetGlobal(shader);
+        World.SetGlobal(font);
+
+        World.AddSystem(new CameraSystem());
+        World.AddSystem(new TetrisLogicSystem());
+        World.AddSystem(new DebugInputSystem()); // Debug
+        World.AddSystem(new TetrisInputSystem());
+        World.AddSystem(new TetrisRenderSystem());
+
+        foreach (Entity e in World.Filter<Camera>().With<Transform>())
         {
-            NextType = Tetromino.GetRandomType()
-        };
-        World.SetGlobal( gameState );
-
-        World.AddSystem( new CameraSystem() );
-        World.AddSystem( new InputSystem() );
-        World.AddSystem( new GameSystem() );
-        World.AddSystem( new RenderSystem() );
-
-        foreach ( Entity e in World.Filter<Camera>().With<Transform>() )
-        {
-            ref Camera camera = ref World.Get<Camera>( e );
+            ref Camera camera = ref World.Get<Camera>(e);
 
             camera.ProjectionType = ProjectionType.Orthographic;
             camera.IsStatic = true;
-            camera.StaticPosition = new Vector3( 0f, 0f, 0f );
+            camera.StaticPosition = new Vector3D<float>(0f, 0f, 0f);
             camera.OrthographicSize = 11f;
-            camera.AspectRatio = ( float )MainWindow.Width / MainWindow.Height;
+            camera.AspectRatio = (float)WindowBase.LogicalWidth / WindowBase.LogicalHeight;
             camera.NearPlane = -10f;
             camera.FarPlane = 10f;
             break;

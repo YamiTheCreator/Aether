@@ -1,10 +1,9 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
-using Aether.Core.Structures;
-using Graphics.Textures;
-using Graphics.Windowing;
+using Silk.NET.Maths;
+using Graphics.Components;
+using Graphics.Structures;
 using Silk.NET.OpenGL;
-using Shader = Graphics.Shaders.Shader;
+using Graphics.Systems;
 
 namespace Graphics;
 
@@ -16,23 +15,23 @@ public class Renderer2D : IDisposable
 
     private readonly GL _gl;
     private readonly BatchData _batchData;
-    private readonly List<QuadVertex> _vertices;
+    private readonly List<Vertex> _vertices;
     private readonly List<uint> _indices;
 
-    private Shader? _shader;
+    private Components.Shader? _shader;
     private Texture2D? _currentTexture;
-    private Matrix4x4 _viewProjection;
+    private Matrix4X4<float> _viewProjection;
     private bool _isInBatch;
 
     public Renderer2D()
     {
-        _gl = MainWindow.Gl;
-        _vertices = new List<QuadVertex>( _maxVertices );
+        _gl = WindowBase.Gl;
+        _vertices = new List<Vertex>( _maxVertices );
         _indices = new List<uint>( _maxIndices );
         _batchData = new BatchData( _gl, _maxVertices, _maxIndices );
     }
 
-    public void Begin( Matrix4x4 viewProjection, Shader shader )
+    public void Begin( Matrix4X4<float> viewProjection, Components.Shader shader )
     {
         if ( _isInBatch )
             throw new InvalidOperationException( "Already in batch. Call End() first." );
@@ -45,14 +44,14 @@ public class Renderer2D : IDisposable
         _isInBatch = true;
     }
 
-    public void SubmitQuad( ReadOnlySpan<QuadVertex> vertices, Texture2D texture )
+    public void SubmitQuad( ReadOnlySpan<Vertex> vertices, Texture2D texture )
     {
         if ( vertices.Length != 4 )
             throw new ArgumentException( "Quad must have exactly 4 vertices" );
 
         if ( _vertices.Count + 4 > _maxVertices ||
              _indices.Count + 6 > _maxIndices ||
-             ( _currentTexture != null && _currentTexture != texture ) )
+             ( _currentTexture.HasValue && _currentTexture.Value.Handle != texture.Handle ) )
         {
             Flush();
         }
@@ -60,7 +59,7 @@ public class Renderer2D : IDisposable
         _currentTexture = texture;
         uint baseVertex = ( uint )_vertices.Count;
 
-        foreach ( QuadVertex vertex in vertices )
+        foreach ( Vertex vertex in vertices )
         {
             _vertices.Add( vertex );
         }
@@ -73,11 +72,12 @@ public class Renderer2D : IDisposable
         _indices.Add( baseVertex + 0 );
     }
 
-    public void SubmitVertices( ReadOnlySpan<QuadVertex> vertices, ReadOnlySpan<uint> indices, Texture2D texture )
+    public void SubmitVertices( ReadOnlySpan<Vertex> vertices, ReadOnlySpan<uint> indices,
+        Texture2D texture )
     {
         if ( _vertices.Count + vertices.Length > _maxVertices ||
              _indices.Count + indices.Length > _maxIndices ||
-             ( _currentTexture != null && _currentTexture != texture ) )
+             ( _currentTexture.HasValue && _currentTexture.Value.Handle != texture.Handle ) )
         {
             Flush();
         }
@@ -85,7 +85,7 @@ public class Renderer2D : IDisposable
         _currentTexture = texture;
         uint baseVertex = ( uint )_vertices.Count;
 
-        foreach ( QuadVertex vertex in vertices )
+        foreach ( Vertex vertex in vertices )
         {
             _vertices.Add( vertex );
         }
@@ -107,20 +107,23 @@ public class Renderer2D : IDisposable
 
     private void Flush()
     {
-        if ( _vertices.Count == 0 || _indices.Count == 0 || _shader == null || _currentTexture == null )
+        if ( _vertices.Count == 0 || _indices.Count == 0 || _shader == null || !_currentTexture.HasValue )
             return;
 
         // Use CollectionsMarshal.AsSpan to avoid ToArray() allocation
-        ReadOnlySpan<QuadVertex> vertexSpan = CollectionsMarshal.AsSpan( _vertices );
+        ReadOnlySpan<Vertex> vertexSpan = CollectionsMarshal.AsSpan( _vertices );
         ReadOnlySpan<uint> indexSpan = CollectionsMarshal.AsSpan( _indices );
-        
+
         _batchData.UpdateData( vertexSpan, indexSpan );
 
-        _shader.Use();
-        _currentTexture.Bind();
+        ShaderSystem shaderSystem = new( _gl );
+        TextureSystem textureSystem = new( _gl );
 
-        _shader.SetUniform( "uViewProjection", _viewProjection );
-        _shader.SetUniform( "uTexture", 0 );
+        shaderSystem.UseShader( _shader.Value );
+        textureSystem.BindTexture( _currentTexture.Value );
+
+        shaderSystem.SetUniform( _shader.Value, "uViewProjection", _viewProjection );
+        shaderSystem.SetUniform( _shader.Value, "uTexture", 0 );
 
         _gl.BindVertexArray( _batchData.Vao );
         unsafe
@@ -154,23 +157,23 @@ public class Renderer2D : IDisposable
             _vbo = _gl.GenBuffer();
             _gl.BindBuffer( BufferTargetARB.ArrayBuffer, _vbo );
             _gl.BufferData( BufferTargetARB.ArrayBuffer,
-                ( nuint )( maxVertices * QuadVertex.SizeInBytes ),
+                ( nuint )( maxVertices * Vertex.SizeInBytes ),
                 null,
                 BufferUsageARB.DynamicDraw );
 
             // Position (vec3) - location 0
             _gl.VertexAttribPointer( 0, 3, VertexAttribPointerType.Float, false,
-                ( uint )QuadVertex.SizeInBytes, ( void* )0 );
+                ( uint )Vertex.SizeInBytes, ( void* )0 );
             _gl.EnableVertexAttribArray( 0 );
 
             // UV (vec2) - location 1
             _gl.VertexAttribPointer( 1, 2, VertexAttribPointerType.Float, false,
-                ( uint )QuadVertex.SizeInBytes, ( void* )12 );
+                ( uint )Vertex.SizeInBytes, ( void* )12 );
             _gl.EnableVertexAttribArray( 1 );
 
             // Color (vec4) - location 2
             _gl.VertexAttribPointer( 2, 4, VertexAttribPointerType.Float, false,
-                ( uint )QuadVertex.SizeInBytes, ( void* )20 );
+                ( uint )Vertex.SizeInBytes, ( void* )20 );
             _gl.EnableVertexAttribArray( 2 );
 
             _ebo = _gl.GenBuffer();
@@ -183,13 +186,13 @@ public class Renderer2D : IDisposable
             _gl.BindVertexArray( 0 );
         }
 
-        public unsafe void UpdateData( ReadOnlySpan<QuadVertex> vertices, ReadOnlySpan<uint> indices )
+        public unsafe void UpdateData( ReadOnlySpan<Vertex> vertices, ReadOnlySpan<uint> indices )
         {
             _gl.BindBuffer( BufferTargetARB.ArrayBuffer, _vbo );
-            fixed ( QuadVertex* ptr = vertices )
+            fixed ( Vertex* ptr = vertices )
             {
                 _gl.BufferSubData( BufferTargetARB.ArrayBuffer, 0,
-                    ( nuint )( vertices.Length * QuadVertex.SizeInBytes ), ptr );
+                    ( nuint )( vertices.Length * Vertex.SizeInBytes ), ptr );
             }
 
             _gl.BindBuffer( BufferTargetARB.ElementArrayBuffer, _ebo );

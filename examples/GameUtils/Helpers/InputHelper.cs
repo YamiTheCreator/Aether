@@ -1,7 +1,6 @@
-using System.Numerics;
+using Graphics;
+using Silk.NET.Maths;
 using Graphics.Components;
-using Graphics.Input;
-using Graphics.Windowing;
 using MouseButton = Silk.NET.Input.MouseButton;
 
 namespace GameUtils.Helpers;
@@ -14,34 +13,49 @@ public static class InputHelper
     /// <summary>
     /// Gets normalized mouse position (accounts for Retina displays)
     /// </summary>
-    public static Vector2 GetMousePosition()
+    public static Vector2D<float> GetMousePosition()
     {
-        Vector2 rawPos = Input.MousePosition;
-        // On Retina displays, mouse coordinates are doubled
-        return rawPos / 2f;
+        System.Numerics.Vector2 rawPos = WindowBase.Input.Mice[0].Position;
+        
+        // Get actual framebuffer size vs logical window size to detect scaling
+        int frameBufferWidth = WindowBase.Width;
+        int frameBufferHeight = WindowBase.Height;
+        int logicalWidth = WindowBase.LogicalWidth;
+        int logicalHeight = WindowBase.LogicalHeight;
+        
+        float scaleX = (float)frameBufferWidth / logicalWidth;
+        float scaleY = (float)frameBufferHeight / logicalHeight;
+        
+        // Normalize coordinates based on actual scaling
+        return new Vector2D<float>(rawPos.X / scaleX, rawPos.Y / scaleY);
     }
 
     /// <summary>
     /// Converts mouse screen position to world coordinates using camera
     /// </summary>
-    public static Vector2 ScreenToWorld( Vector2 mousePos, Camera camera )
+    public static Vector2D<float> ScreenToWorld( Vector2D<float> mousePos, Camera camera )
     {
-        float screenWidth = MainWindow.Width / 2f;
-        float screenHeight = MainWindow.Height / 2f;
+        float screenWidth = WindowBase.LogicalWidth;
+        float screenHeight = WindowBase.LogicalHeight;
 
         float worldHalfHeight = camera.OrthographicSize;
-        float worldHalfWidth = worldHalfHeight * ( screenWidth / screenHeight );
+        float worldHalfWidth = worldHalfHeight * camera.AspectRatio;
 
-        float mouseX = ( mousePos.X / screenWidth ) * worldHalfWidth - worldHalfWidth;
-        float mouseY = worldHalfHeight - ( mousePos.Y / screenHeight ) * worldHalfHeight;
+        // Normalize mouse position to [-1, 1] range
+        float normalizedX = (mousePos.X / screenWidth) * 2f - 1f;
+        float normalizedY = 1f - (mousePos.Y / screenHeight) * 2f; // Flip Y axis
 
-        return new Vector2( mouseX, mouseY );
+        // Convert to world coordinates
+        float worldX = normalizedX * worldHalfWidth;
+        float worldY = normalizedY * worldHalfHeight;
+
+        return new Vector2D<float>( worldX, worldY );
     }
 
     /// <summary>
     /// Converts world position to grid cell coordinates
     /// </summary>
-    public static Vector2? WorldToCell( Vector2 worldPos, Vector2 gridOffset, float cellSize, int gridWidth,
+    public static Vector2D<float>? WorldToCell( Vector2D<float> worldPos, Vector2D<float> gridOffset, float cellSize, int gridWidth,
         int gridHeight )
     {
         float localX = worldPos.X - gridOffset.X;
@@ -53,7 +67,7 @@ public static class InputHelper
         if ( cellX < 0 || cellX >= gridWidth || cellY < 0 || cellY >= gridHeight )
             return null;
 
-        return new Vector2( cellX, cellY );
+        return new Vector2D<float>( cellX, cellY );
     }
 
     /// <summary>
@@ -61,7 +75,7 @@ public static class InputHelper
     /// </summary>
     public static bool IsMouseJustPressed( MouseButton button, ref bool previousState )
     {
-        bool currentState = Input.IsMouseButtonDown( button );
+        bool currentState = WindowBase.Input.Mice[0].IsButtonPressed(button);
         bool justPressed = currentState && !previousState;
         previousState = currentState;
         return justPressed;

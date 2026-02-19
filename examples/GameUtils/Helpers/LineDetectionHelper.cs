@@ -1,4 +1,4 @@
-using System.Numerics;
+using Silk.NET.Maths;
 
 namespace GameUtils.Helpers;
 
@@ -17,14 +17,14 @@ public static class LineDetectionHelper
     /// <param name="getValue">Function to get value at cell</param>
     /// <param name="minLength">Minimum line length to count</param>
     /// <returns>HashSet of all cells in matching lines</returns>
-    public static HashSet<Vector2> FindMatchingLines( int x, int y, int gridWidth, int gridHeight,
+    public static HashSet<Vector2D<float>> FindMatchingLines( int x, int y, int gridWidth, int gridHeight,
         Func<int, int, int> getValue, int minLength = 5 )
     {
         int value = getValue( x, y );
         if ( value == 0 )
             return [ ];
 
-        HashSet<Vector2> result = [ ];
+        HashSet<Vector2D<float>> result = [ ];
 
         // Check all 4 directions
         CheckLine( x, y, 1, 0, gridWidth, gridHeight, getValue, value, minLength, result ); // Horizontal
@@ -36,9 +36,9 @@ public static class LineDetectionHelper
     }
 
     private static void CheckLine( int x, int y, int dx, int dy, int gridWidth, int gridHeight,
-        Func<int, int, int> getValue, int targetValue, int minLength, HashSet<Vector2> result )
+        Func<int, int, int> getValue, int targetValue, int minLength, HashSet<Vector2D<float>> result )
     {
-        List<Vector2> line = [ new( x, y ) ];
+        List<Vector2D<float>> line = [ new( x, y ) ];
 
         // Check negative direction
         for ( int i = 1;; i++ )
@@ -52,7 +52,7 @@ public static class LineDetectionHelper
             if ( getValue( nx, ny ) != targetValue )
                 break;
 
-            line.Add( new Vector2( nx, ny ) );
+            line.Add( new Vector2D<float>( nx, ny ) );
         }
 
         // Check positive direction
@@ -67,12 +67,12 @@ public static class LineDetectionHelper
             if ( getValue( nx, ny ) != targetValue )
                 break;
 
-            line.Add( new Vector2( nx, ny ) );
+            line.Add( new Vector2D<float>( nx, ny ) );
         }
 
         if ( line.Count >= minLength )
         {
-            foreach ( Vector2 cell in line )
+            foreach ( Vector2D<float> cell in line )
                 result.Add( cell );
         }
     }

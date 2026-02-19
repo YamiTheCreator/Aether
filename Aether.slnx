@@ -3,12 +3,9 @@
         <Project Path="examples/Tetris/Tetris.csproj" />
         <Project Path="examples/ColorLines/ColorLines.csproj" />
         <Project Path="examples/GameUtils/GameUtils.csproj" />
-        <Project Path="examples/Hangman/Hangman.csproj" />
-        <Project Path="examples\BouncingLetters\BouncingLetters.csproj" />
     </Folder>
     <Folder Name="/src/">
         <Project Path="src/Core/Core.csproj" />
         <Project Path="src/Graphics/Graphics.csproj" />
-        <Project Path="src/UI/UI.csproj" />
     </Folder>
 </Solution>

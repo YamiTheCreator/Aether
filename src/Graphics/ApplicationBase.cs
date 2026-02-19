@@ -1,9 +1,9 @@
-using System.Numerics;
+using Silk.NET.Maths;
 using Aether.Core;
 using Aether.Core.Enums;
 using Aether.Core.Options;
 using Graphics.Components;
-using Graphics.Windowing;
+using Graphics.Systems;
 using Silk.NET.Input;
 using Silk.NET.Windowing;
 
@@ -17,13 +17,15 @@ public abstract class ApplicationBase(
     bool fullScreen = false,
     bool createDefaultCamera = true )
 {
-    private MainWindow MainWindow { get; set; } = null!;
+    private WindowBase WindowBase { get; set; } = null!;
     protected World World { get; private set; } = null!;
+    private InputSystem _inputSystem = null!;
+    private Components.Input _input;
 
     private readonly WindowOptions _windowOptions = new()
     {
         Title = title,
-        Size = new Silk.NET.Maths.Vector2D<int>( width, height ),
+        Size = new Vector2D<int>( width, height ),
         VSync = true,
         WindowState = fullScreen ? WindowState.Maximized : WindowState.Normal,
     };
@@ -32,21 +34,27 @@ public abstract class ApplicationBase(
 
     public void Run()
     {
-        MainWindow = new MainWindow( _windowOptions );
+        WindowBase = new WindowBase( _windowOptions );
         World = new World( _worldOptions );
 
-        MainWindow.OnLoad += OnLoad;
-        MainWindow.OnUpdate += OnUpdate;
-        MainWindow.OnRender += OnRender;
-        MainWindow.OnResize += OnResize;
-        MainWindow.OnClosing += OnClosing;
+        WindowBase.OnLoad += OnLoad;
+        WindowBase.OnUpdate += OnUpdate;
+        WindowBase.OnRender += OnRender;
+        WindowBase.OnResize += OnResize;
+        WindowBase.OnClosing += OnClosing;
 
-        MainWindow.Run();
+        WindowBase.Run();
     }
 
     private void OnLoad()
     {
-        World.SetGlobal( MainWindow );
+        World.SetGlobal( WindowBase );
+
+        // Initialize Input System
+        _inputSystem = new InputSystem();
+        _input = _inputSystem.CreateInput( WindowBase.Input );
+        World.SetGlobal( _input );
+        World.SetGlobal( _inputSystem );
 
         if ( createDefaultCamera )
         {
@@ -62,12 +70,16 @@ public abstract class ApplicationBase(
 
     private void OnUpdate( double deltaTime )
     {
-        Input.Input.Update();
+        // Update input state
+        _inputSystem.Update( ref _input );
+        World.SetGlobal( _input ); // Update global input state
+
         World.Update( ( float )deltaTime );
 
-        if ( Input.Input.IsKeyDown( Key.Escape ) )
+        // Check for Escape key to close window
+        if ( _inputSystem.IsKeyDown( _input, Key.Escape ) )
         {
-            MainWindow.Close();
+            WindowBase.Close();
         }
     }
 
@@ -90,10 +102,10 @@ public abstract class ApplicationBase(
 
     private Entity CreateDefaultCamera()
     {
-        float aspectRatio = ( float )MainWindow.Width / MainWindow.Height;
+        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
 
         Entity cameraEntity = World.Spawn(
-            new Transform( new Vector3( 0, 0, 0 ) ),
+            new Transform( new Vector3D<float>( 0, 0, 0 ) ),
             new Camera
             {
                 ProjectionType = ProjectionType.Orthographic,
@@ -106,12 +118,12 @@ public abstract class ApplicationBase(
         return cameraEntity;
     }
 
-    protected Entity CreateStaticCamera( Vector3 position, float size = 10f )
+    protected Entity CreateStaticCamera( Vector3D<float> position, float size = 10f )
     {
-        float aspectRatio = ( float )MainWindow.Width / MainWindow.Height;
+        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
 
         Entity cameraEntity = World.Spawn(
-            new Transform( Vector3.Zero ),
+            new Transform( Vector3D<float>.Zero ),
             new Camera
             {
                 ProjectionType = ProjectionType.Orthographic,
@@ -127,12 +139,12 @@ public abstract class ApplicationBase(
     }
 
     protected Entity CreatePerspectiveCamera(
-        Vector3 position,
+        Vector3D<float> position,
         float fov = 45f,
         float nearPlane = 0.1f,
         float farPlane = 100f )
     {
-        float aspectRatio = ( float )MainWindow.Width / MainWindow.Height;
+        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
 
         Entity cameraEntity = World.Spawn(
             new Transform( position ),
@@ -149,12 +161,12 @@ public abstract class ApplicationBase(
     }
 
     protected Entity CreateOrthographicCamera(
-        Vector3 position,
+        Vector3D<float> position,
         float size = 10f,
         float nearPlane = 0.1f,
         float farPlane = 100f )
     {
-        float aspectRatio = ( float )MainWindow.Width / MainWindow.Height;
+        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
 
         Entity cameraEntity = World.Spawn(
             new Transform( position ),

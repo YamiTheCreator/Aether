@@ -1,6 +1,6 @@
 namespace Aether.Core;
 
-public abstract class ComponentBase : IComponent
+public abstract class ComponentBase : Component
 {
     protected virtual void OnAdd( Entity entity, World world )
     {

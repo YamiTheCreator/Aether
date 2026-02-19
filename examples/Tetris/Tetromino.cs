@@ -1,66 +1,67 @@
-using System.Numerics;
+using Silk.NET.Maths;
 using GameUtils.Helpers;
+using Tetris.Components;
 
 namespace Tetris;
 
 public static class Tetromino
 {
-    private static readonly Dictionary<TetrominoType, Vector2[][]> _shapes = new()
+    private static readonly Dictionary<TetrominoType, Vector2D<float>[][]> _shapes = new()
     {
         [ TetrominoType.I ] =
         [
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 3, 1 ) ], // Horizontal
-            [ new Vector2( 2, 0 ), new Vector2( 2, 1 ), new Vector2( 2, 2 ), new Vector2( 2, 3 ) ], // Vertical
-            [ new Vector2( 0, 2 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ), new Vector2( 3, 2 ) ], // Horizontal
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 1, 3 ) ] // Vertical
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 3, 1 ) ], // Horizontal
+            [ new Vector2D<float>( 2, 0 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 2, 3 ) ], // Vertical
+            [ new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 3, 2 ) ], // Horizontal
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 3 ) ] // Vertical
         ],
         [ TetrominoType.O ] =
         [
-            [ new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ) ],
-            [ new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ) ],
-            [ new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ) ],
-            [ new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ) ]
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ]
         ],
         [ TetrominoType.T ] =
         [
-            [ new Vector2( 1, 1 ), new Vector2( 0, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 2 ) ], // T pointing up
-            [ new Vector2( 1, 1 ), new Vector2( 1, 0 ), new Vector2( 1, 2 ), new Vector2( 2, 1 ) ], // T pointing right
-            [ new Vector2( 1, 1 ), new Vector2( 0, 1 ), new Vector2( 2, 1 ), new Vector2( 1, 0 ) ], // T pointing down
-            [ new Vector2( 1, 1 ), new Vector2( 1, 0 ), new Vector2( 1, 2 ), new Vector2( 0, 1 ) ] // T pointing left
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ) ], // T pointing up
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 1 ) ], // T pointing right
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 0 ) ], // T pointing down
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 1 ) ] // T pointing left
         ],
         [ TetrominoType.S ] =
         [
-            [ new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 0, 0 ), new Vector2( 1, 0 ) ],
-            [ new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ), new Vector2( 2, 3 ) ],
-            [ new Vector2( 1, 2 ), new Vector2( 2, 2 ), new Vector2( 0, 1 ), new Vector2( 1, 1 ) ],
-            [ new Vector2( 0, 0 ), new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ) ]
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 0 ), new Vector2D<float>( 1, 0 ) ],
+            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 2, 3 ) ],
+            [ new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ) ],
+            [ new Vector2D<float>( 0, 0 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ) ]
         ],
         [ TetrominoType.Z ] =
         [
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 1, 0 ), new Vector2( 2, 0 ) ],
-            [ new Vector2( 2, 1 ), new Vector2( 2, 2 ), new Vector2( 1, 2 ), new Vector2( 1, 3 ) ],
-            [ new Vector2( 0, 2 ), new Vector2( 1, 2 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ) ],
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 0, 1 ), new Vector2( 0, 2 ) ]
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 2, 0 ) ],
+            [ new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 3 ) ],
+            [ new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ) ],
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 0, 2 ) ]
         ],
         [ TetrominoType.J ] =
         [
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 0, 0 ) ],
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 0 ) ],
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 2, 2 ) ],
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 0, 2 ) ]
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 0 ) ],
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 0 ) ],
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ) ],
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 2 ) ]
         ],
         [ TetrominoType.L ] =
         [
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 2, 0 ) ],
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 2, 2 ) ],
-            [ new Vector2( 0, 1 ), new Vector2( 1, 1 ), new Vector2( 2, 1 ), new Vector2( 0, 2 ) ],
-            [ new Vector2( 1, 0 ), new Vector2( 1, 1 ), new Vector2( 1, 2 ), new Vector2( 0, 0 ) ]
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 0 ) ],
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
+            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 2 ) ],
+            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 0 ) ]
         ]
     };
 
-    public static Vector2[] GetBlocks( TetrominoType type, int rotation )
+    public static Vector2D<float>[] GetBlocks( TetrominoType type, int rotation )
     {
-        if ( type == TetrominoType.None || !_shapes.TryGetValue( type, out Vector2[][]? value ) )
+        if ( type == TetrominoType.None || !_shapes.TryGetValue( type, out Vector2D<float>[][]? value ) )
             return [ ];
 
         rotation %= 4;
@@ -82,10 +83,10 @@ public static class Tetromino
         };
     }
 
-    public static Vector4 GetColor( int colorIndex )
+    public static Vector4D<float> GetColor( int colorIndex )
     {
         if ( colorIndex == 0 )
-            return new Vector4( 0.3f, 0.3f, 0.3f, 1 ); // Gray for empty
+            return new Vector4D<float>( 0.3f, 0.3f, 0.3f, 1 ); // Gray for empty
 
         return ColorPalette.GetColor( ColorPalette.Tetris, colorIndex - 1 );
     }

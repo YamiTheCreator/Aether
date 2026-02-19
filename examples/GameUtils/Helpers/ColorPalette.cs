@@ -1,4 +1,4 @@
-using System.Numerics;
+using Silk.NET.Maths;
 
 namespace GameUtils.Helpers;
 
@@ -10,7 +10,7 @@ public static class ColorPalette
     /// <summary>
     /// Tetris colors (7 pieces)
     /// </summary>
-    public static readonly Vector4[] Tetris =
+    public static readonly Vector4D<float>[] Tetris =
     [
         new( 0.0f, 1.0f, 1.0f, 1.0f ), // Cyan (I)
         new( 1.0f, 1.0f, 0.0f, 1.0f ), // Yellow (O)
@@ -24,7 +24,7 @@ public static class ColorPalette
     /// <summary>
     /// ColorLines colors (6 ball colors)
     /// </summary>
-    public static readonly Vector4[] ColorLines =
+    public static readonly Vector4D<float>[] ColorLines =
     [
         new( 1.0f, 0.0f, 0.0f, 1.0f ), // Red
         new( 0.0f, 1.0f, 0.0f, 1.0f ), // Green
@@ -37,7 +37,7 @@ public static class ColorPalette
     /// <summary>
     /// Rainbow colors (general purpose)
     /// </summary>
-    public static readonly Vector4[] Rainbow =
+    public static readonly Vector4D<float>[] Rainbow =
     [
         new( 1.0f, 0.0f, 0.0f, 1.0f ), // Red
         new( 1.0f, 0.5f, 0.0f, 1.0f ), // Orange
@@ -51,7 +51,7 @@ public static class ColorPalette
     /// <summary>
     /// Gets color from palette by index (wraps around)
     /// </summary>
-    public static Vector4 GetColor( Vector4[] palette, int index )
+    public static Vector4D<float> GetColor( Vector4D<float>[] palette, int index )
     {
         return palette[ index % palette.Length ];
     }

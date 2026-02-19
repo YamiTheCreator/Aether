@@ -1,9 +1,7 @@
-using System.Numerics;
+using Silk.NET.Maths;
 using Aether.Core;
 using Aether.Core.Enums;
 using Aether.Core.Extensions;
-using Aether.Core.Helpers;
-using Aether.Core.Systems;
 using Graphics.Components;
 
 namespace Graphics.Systems;
@@ -17,23 +15,23 @@ public class CameraSystem : SystemBase
             ref Camera camera = ref World.Get<Camera>( entity );
             ref Transform transform = ref World.Get<Transform>( entity );
 
-            // Update transform rotation based on yaw and pitch
-            UpdateCameraRotation( ref camera, ref transform );
-
-            // Determine camera position (static or from transform)
-            Vector3 cameraPosition = camera.IsStatic ? camera.StaticPosition : transform.Position;
-
-            // Update projection matrix
+            // Only update rotation for perspective cameras
             if ( camera.ProjectionType == ProjectionType.Perspective )
             {
-                // 3D Perspective: use LookAt view matrix with Transform vectors
-                camera.ViewMatrix = CoordinateHelper.WorldToView(
+                UpdateCameraRotation( ref camera, ref transform );
+            }
+
+            Vector3D<float> cameraPosition = camera.IsStatic ? camera.StaticPosition : transform.Position;
+
+            if ( camera.ProjectionType == ProjectionType.Perspective )
+            {
+                camera.ViewMatrix = TransformSystem.CreateViewMatrix(
                     cameraPosition,
                     cameraPosition + transform.Forward,
                     transform.Up
                 );
 
-                camera.ProjectionMatrix = CoordinateHelper.ViewToClipPerspective(
+                camera.ProjectionMatrix = TransformSystem.CreatePerspectiveProjection(
                     MathExtensions.DegToRad( camera.FieldOfView ),
                     camera.AspectRatio,
                     camera.NearPlane,
@@ -42,14 +40,12 @@ public class CameraSystem : SystemBase
             }
             else
             {
-                // 2D Orthographic: use identity view
-                camera.ViewMatrix = Matrix4x4.Identity;
+                camera.ViewMatrix = Matrix4X4<float>.Identity;
 
-                // Use OrthographicSize centered on camera position
                 float halfWidth = camera.OrthographicSize * camera.AspectRatio;
                 float halfHeight = camera.OrthographicSize;
 
-                camera.ProjectionMatrix = CoordinateHelper.ViewToClipOrthographic(
+                camera.ProjectionMatrix = TransformSystem.CreateOrthographicProjection(
                     cameraPosition.X - halfWidth,
                     cameraPosition.X + halfWidth,
                     cameraPosition.Y - halfHeight,
@@ -59,34 +55,33 @@ public class CameraSystem : SystemBase
                 );
             }
 
-            // Update combined view-projection matrix
             camera.ViewProjectionMatrix = camera.ProjectionMatrix * camera.ViewMatrix;
         }
     }
 
-    public void ProcessKeyboard( ref Camera camera, ref Transform transform, CameraMovement direction, float deltaTime )
+    public void ProcessKeyboard( ref Camera camera, ref Transform transform, MovementType direction, float deltaTime )
     {
         float velocity = camera.MovementSpeed * deltaTime;
-        Vector3 movement = Vector3.Zero;
+        Vector3D<float> movement = Vector3D<float>.Zero;
 
         switch ( direction )
         {
-            case CameraMovement.Forward:
+            case MovementType.Forward:
                 movement = transform.Forward * velocity;
                 break;
-            case CameraMovement.Backward:
+            case MovementType.Backward:
                 movement = -transform.Forward * velocity;
                 break;
-            case CameraMovement.Left:
+            case MovementType.Left:
                 movement = -transform.Right * velocity;
                 break;
-            case CameraMovement.Right:
+            case MovementType.Right:
                 movement = transform.Right * velocity;
                 break;
-            case CameraMovement.Up:
+            case MovementType.Up:
                 movement = transform.Up * velocity;
                 break;
-            case CameraMovement.Down:
+            case MovementType.Down:
                 movement = -transform.Up * velocity;
                 break;
         }
@@ -101,7 +96,8 @@ public class CameraSystem : SystemBase
         }
     }
 
-    public void ProcessMouseMovement( ref Camera camera, ref Transform transform, float xOffset, float yOffset, bool constrainPitch = true )
+    public void ProcessMouseMovement( ref Camera camera, ref Transform transform, float xOffset, float yOffset,
+        bool constrainPitch = true )
     {
         xOffset *= camera.MouseSensitivity;
         yOffset *= camera.MouseSensitivity;
@@ -136,10 +132,9 @@ public class CameraSystem : SystemBase
         float yawRad = MathExtensions.DegToRad( camera.Yaw );
         float pitchRad = MathExtensions.DegToRad( camera.Pitch );
 
-        // Create rotation quaternion from yaw and pitch
-        Quaternion yawRotation = Quaternion.CreateFromAxisAngle( Vector3.UnitY, yawRad );
-        Quaternion pitchRotation = Quaternion.CreateFromAxisAngle( Vector3.UnitX, pitchRad );
-        
+        Quaternion<float> yawRotation = Quaternion<float>.CreateFromAxisAngle( Vector3D<float>.UnitY, yawRad );
+        Quaternion<float> pitchRotation = Quaternion<float>.CreateFromAxisAngle( Vector3D<float>.UnitX, pitchRad );
+
         transform.Rotation = yawRotation * pitchRotation;
     }
 }

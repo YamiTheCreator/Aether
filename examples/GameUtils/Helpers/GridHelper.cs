@@ -1,4 +1,4 @@
-using System.Numerics;
+using Silk.NET.Maths;
 
 namespace GameUtils.Helpers;
 
@@ -31,9 +31,9 @@ public static class GridHelper
     /// <summary>
     /// Gets all empty cell positions
     /// </summary>
-    public static List<Vector2> GetEmptyCells( int[,] grid, int emptyValue = 0 )
+    public static List<Vector2D<float>> GetEmptyCells( int[,] grid, int emptyValue = 0 )
     {
-        List<Vector2> cells = [ ];
+        List<Vector2D<float>> cells = [ ];
         int width = grid.GetLength( 0 );
         int height = grid.GetLength( 1 );
 
@@ -42,7 +42,7 @@ public static class GridHelper
             for ( int y = 0; y < height; y++ )
             {
                 if ( grid[ x, y ] == emptyValue )
-                    cells.Add( new Vector2( x, y ) );
+                    cells.Add( new Vector2D<float>( x, y ) );
             }
         }
 

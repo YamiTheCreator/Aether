@@ -1,10 +1,10 @@
-using System.Numerics;
 using Aether.Core;
 using Aether.Core.Enums;
+using Silk.NET.Maths;
 
 namespace Graphics.Components;
 
-public struct Camera() : IComponent
+public struct Camera() : Component
 {
     public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective;
 
@@ -30,11 +30,11 @@ public struct Camera() : IComponent
 
     public bool IsStatic { get; set; } = false;
 
-    public Vector3 StaticPosition { get; set; } = Vector3.Zero;
-    public Vector3 WorldUp { get; set; } = Vector3.UnitY;
+    public Vector3D<float> StaticPosition { get; set; } = Vector3D<float>.Zero;
+    public Vector3D<float> WorldUp { get; set; } = Vector3D<float>.UnitY;
 
     // Cached matrices
-    public Matrix4x4 ViewMatrix { get; set; } = Matrix4x4.Identity;
-    public Matrix4x4 ProjectionMatrix { get; set; } = Matrix4x4.Identity;
-    public Matrix4x4 ViewProjectionMatrix { get; set; } = Matrix4x4.Identity;
+    public Matrix4X4<float> ViewMatrix { get; set; } = Matrix4X4<float>.Identity;
+    public Matrix4X4<float> ProjectionMatrix { get; set; } = Matrix4X4<float>.Identity;
+    public Matrix4X4<float> ViewProjectionMatrix { get; set; } = Matrix4X4<float>.Identity;
 }
