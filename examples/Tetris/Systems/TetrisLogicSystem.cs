@@ -1,6 +1,6 @@
 using Silk.NET.Maths;
 using Aether.Core;
-using GameUtils.Helpers;
+using Aether.Core.Utilities;
 using Tetris.Components;
 
 namespace Tetris.Systems;
@@ -9,50 +9,52 @@ public class TetrisLogicSystem : SystemBase
 {
     protected override void OnInit()
     {
-        // Create game entity
         Entity gameEntity = World.Spawn();
-        
-        World.Add(gameEntity, new TetrisBoardComponent { Board = new int[10, 20] });
-        World.Add(gameEntity, new TetrisPieceComponent 
-        { 
-            Type = TetrominoType.None, 
-            Rotation = 0, 
-            Position = new Vector2D<float>(4, 19) 
-        });
-        World.Add(gameEntity, new TetrisGameStateComponent 
-        { 
-            Score = 0, 
-            Level = 1, 
-            LinesCleared = 0, 
-            IsGameOver = false, 
-            NextType = Tetromino.GetRandomType() 
-        });
-        World.Add(gameEntity, new TetrisTimerComponent 
-        { 
-            DropTimer = 0f, 
-            DropInterval = 1.0f, 
-            LockTimer = 0f, 
-            IsLocking = false, 
-            MoveTimer = 0f, 
-            RotateTimer = 0f 
-        });
-        
+
+        World.Add( gameEntity, new TetrisBoardComponent
+        {
+            Board = new int[ 10, 20 ]
+        } );
+        World.Add( gameEntity, new TetrisPieceComponent
+        {
+            Type = TetrominoType.None,
+            Rotation = 0,
+            Position = new Vector2D<float>( 4, 19 )
+        } );
+        World.Add( gameEntity, new TetrisGameStateComponent
+        {
+            Score = 0,
+            Level = 1,
+            LinesCleared = 0,
+            IsGameOver = false,
+            NextType = Tetromino.GetRandomType()
+        } );
+        World.Add( gameEntity, new TetrisTimerComponent
+        {
+            DropTimer = 0f,
+            DropInterval = 1.0f,
+            LockTimer = 0f,
+            IsLocking = false,
+            MoveTimer = 0f,
+            RotateTimer = 0f
+        } );
+
         // Spawn first piece
-        ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>(gameEntity);
-        ref TetrisPieceComponent piece = ref World.Get<TetrisPieceComponent>(gameEntity);
-        ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>(gameEntity);
-        ref TetrisBoardComponent board = ref World.Get<TetrisBoardComponent>(gameEntity);
-        
-        SpawnNewPiece(ref state, ref piece, ref timers, board.Board);
+        ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>( gameEntity );
+        ref TetrisPieceComponent piece = ref World.Get<TetrisPieceComponent>( gameEntity );
+        ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>( gameEntity );
+        ref TetrisBoardComponent board = ref World.Get<TetrisBoardComponent>( gameEntity );
+
+        SpawnNewPiece( ref state, ref piece, ref timers, board.Board );
     }
 
     protected override void OnUpdate( float deltaTime )
     {
         foreach ( Entity entity in World.Filter<TetrisGameStateComponent>().With<TetrisTimerComponent>() )
         {
-            if (!World.Has<TetrisPieceComponent>(entity) || !World.Has<TetrisBoardComponent>(entity))
+            if ( !World.Has<TetrisPieceComponent>( entity ) || !World.Has<TetrisBoardComponent>( entity ) )
                 continue;
-            
+
             ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>( entity );
             ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>( entity );
             ref TetrisPieceComponent piece = ref World.Get<TetrisPieceComponent>( entity );
@@ -102,9 +104,10 @@ public class TetrisLogicSystem : SystemBase
     {
         foreach ( Entity entity in World.Filter<TetrisGameStateComponent>() )
         {
-            if (!World.Has<TetrisTimerComponent>(entity) || !World.Has<TetrisPieceComponent>(entity) || !World.Has<TetrisBoardComponent>(entity))
+            if ( !World.Has<TetrisTimerComponent>( entity ) || !World.Has<TetrisPieceComponent>( entity ) ||
+                 !World.Has<TetrisBoardComponent>( entity ) )
                 continue;
-            
+
             ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>( entity );
             ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>( entity );
             ref TetrisPieceComponent piece = ref World.Get<TetrisPieceComponent>( entity );

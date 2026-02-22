@@ -3,7 +3,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\Core\Core.csproj"/>
         <ProjectReference Include="..\..\src\Graphics\Graphics.csproj"/>
-        <ProjectReference Include="..\GameUtils\GameUtils.csproj" />
     </ItemGroup>
 
     <ItemGroup>

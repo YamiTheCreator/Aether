@@ -9,7 +9,6 @@ public class BufferObject : IDisposable
     public BufferTargetARB Target { get; }
 
     public int ElementCount { get; private set; }
-
     public int ElementSize { get; private set; }
 
     public BufferObject( GL gl, BufferTargetARB target )
@@ -33,7 +32,6 @@ public class BufferObject : IDisposable
 
     public unsafe void SetData<T>( ReadOnlySpan<T> data, BufferUsageARB usage ) where T : unmanaged
     {
-        Bind();
         fixed ( T* ptr = data )
         {
             _gl.BufferData( Target, ( nuint )( data.Length * sizeof(T) ), ptr, usage );
@@ -45,14 +43,10 @@ public class BufferObject : IDisposable
 
     public unsafe void SetSubData<T>( ReadOnlySpan<T> data, int offset = 0 ) where T : unmanaged
     {
-        Bind();
         fixed ( T* ptr = data )
         {
             _gl.BufferSubData( Target, offset, ( nuint )( data.Length * sizeof(T) ), ptr );
         }
-
-        // Note: SetSubData doesn't change the total element count
-        // It only updates a portion of the buffer
     }
 
     public void Dispose()

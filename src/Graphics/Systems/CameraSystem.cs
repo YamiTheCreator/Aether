@@ -1,140 +1,162 @@
-using Silk.NET.Maths;
+using System.Runtime.InteropServices;
 using Aether.Core;
 using Aether.Core.Enums;
-using Aether.Core.Extensions;
 using Graphics.Components;
+using Graphics.Structures;
+using Silk.NET.Maths;
 
 namespace Graphics.Systems;
 
 public class CameraSystem : SystemBase
 {
+    private const float _defaultMovementSpeed = 5.0f;
+    private const float _defaultMouseSensitivity = 0.1f;
+
+    public float MovementSpeed { get; set; } = _defaultMovementSpeed;
+    public float MouseSensitivity { get; set; } = _defaultMouseSensitivity;
+
+    protected override void OnInit()
+    {
+    }
+
     protected override void OnUpdate( float deltaTime )
     {
-        foreach ( Entity entity in World.Filter<Camera>().With<Transform>() )
+        UpdateCameraMatrices();
+    }
+
+    private void UpdateCameraMatrices()
+    {
+        foreach ( Entity entity in World.Filter<Camera>() )
         {
             ref Camera camera = ref World.Get<Camera>( entity );
-            ref Transform transform = ref World.Get<Transform>( entity );
 
-            // Only update rotation for perspective cameras
-            if ( camera.ProjectionType == ProjectionType.Perspective )
+            if ( camera.IsOrbitMode )
             {
-                UpdateCameraRotation( ref camera, ref transform );
+                Vector3D<float> orbitPosition = camera.StaticPosition;
+                camera.ViewMatrix = CalculateViewMatrix( orbitPosition, camera.Forward, camera.Up );
+                camera.ProjectionMatrix = CalculateProjectionMatrix( ref camera );
+                camera.ViewProjectionMatrix = camera.ViewMatrix * camera.ProjectionMatrix;
+                continue;
             }
 
-            Vector3D<float> cameraPosition = camera.IsStatic ? camera.StaticPosition : transform.Position;
-
             if ( camera.ProjectionType == ProjectionType.Perspective )
             {
-                camera.ViewMatrix = TransformSystem.CreateViewMatrix(
-                    cameraPosition,
-                    cameraPosition + transform.Forward,
-                    transform.Up
-                );
-
-                camera.ProjectionMatrix = TransformSystem.CreatePerspectiveProjection(
-                    MathExtensions.DegToRad( camera.FieldOfView ),
-                    camera.AspectRatio,
-                    camera.NearPlane,
-                    camera.FarPlane
-                );
+                UpdateCameraVectors( ref camera );
             }
             else
             {
-                camera.ViewMatrix = Matrix4X4<float>.Identity;
-
-                float halfWidth = camera.OrthographicSize * camera.AspectRatio;
-                float halfHeight = camera.OrthographicSize;
-
-                camera.ProjectionMatrix = TransformSystem.CreateOrthographicProjection(
-                    cameraPosition.X - halfWidth,
-                    cameraPosition.X + halfWidth,
-                    cameraPosition.Y - halfHeight,
-                    cameraPosition.Y + halfHeight,
-                    camera.NearPlane,
-                    camera.FarPlane
-                );
+                if ( camera.Forward == Vector3D<float>.Zero )
+                {
+                    camera.Forward = new Vector3D<float>( 0, 0, -1 );
+                    camera.Right = new Vector3D<float>( 1, 0, 0 );
+                    camera.Up = new Vector3D<float>( 0, 1, 0 );
+                }
             }
 
-            camera.ViewProjectionMatrix = camera.ProjectionMatrix * camera.ViewMatrix;
+            Vector3D<float> position = camera.IsStatic
+                ? camera.StaticPosition
+                : World.Get<Transform>( entity ).Position;
+
+            camera.ViewMatrix = CalculateViewMatrix( position, camera.Forward, camera.Up );
+            camera.ProjectionMatrix = CalculateProjectionMatrix( ref camera );
+            camera.ViewProjectionMatrix = camera.ViewMatrix * camera.ProjectionMatrix;
+        }
+    }
+
+    private Matrix4X4<float> CalculateViewMatrix( Vector3D<float> position, Vector3D<float> forward,
+        Vector3D<float> up )
+    {
+        Vector3D<float> target = position + forward;
+        return Matrix4X4.CreateLookAt( position, target, up );
+    }
+
+    private Matrix4X4<float> CalculateProjectionMatrix( ref Camera camera )
+    {
+        if ( camera.ProjectionType == ProjectionType.Perspective )
+        {
+            return Matrix4X4.CreatePerspectiveFieldOfView(
+                camera.FieldOfView * ( MathF.PI / 180.0f ),
+                camera.AspectRatio,
+                camera.NearPlane,
+                camera.FarPlane
+            );
+        }
+        else
+        {
+            float width = camera.OrthographicSize * camera.AspectRatio;
+            float height = camera.OrthographicSize;
+            return Matrix4X4.CreateOrthographic(
+                width,
+                height,
+                camera.NearPlane,
+                camera.FarPlane
+            );
         }
     }
 
     public void ProcessKeyboard( ref Camera camera, ref Transform transform, MovementType direction, float deltaTime )
     {
-        float velocity = camera.MovementSpeed * deltaTime;
-        Vector3D<float> movement = Vector3D<float>.Zero;
+        float velocity = MovementSpeed * deltaTime;
+
+        Vector3D<float> forward = camera.Forward;
+        Vector3D<float> right = camera.Right;
+        Vector3D<float> up = camera.Up;
 
         switch ( direction )
         {
             case MovementType.Forward:
-                movement = transform.Forward * velocity;
+                transform.Position += forward * velocity;
                 break;
             case MovementType.Backward:
-                movement = -transform.Forward * velocity;
+                transform.Position -= forward * velocity;
                 break;
             case MovementType.Left:
-                movement = -transform.Right * velocity;
+                transform.Position -= right * velocity;
                 break;
             case MovementType.Right:
-                movement = transform.Right * velocity;
+                transform.Position += right * velocity;
                 break;
             case MovementType.Up:
-                movement = transform.Up * velocity;
+                transform.Position += up * velocity;
                 break;
             case MovementType.Down:
-                movement = -transform.Up * velocity;
+                transform.Position -= up * velocity;
                 break;
-        }
-
-        if ( camera.IsStatic )
-        {
-            camera.StaticPosition += movement;
-        }
-        else
-        {
-            transform.Position += movement;
         }
     }
 
     public void ProcessMouseMovement( ref Camera camera, ref Transform transform, float xOffset, float yOffset,
         bool constrainPitch = true )
     {
-        xOffset *= camera.MouseSensitivity;
-        yOffset *= camera.MouseSensitivity;
+        xOffset *= -MouseSensitivity;
+        yOffset *= MouseSensitivity;
 
         camera.Yaw += xOffset;
         camera.Pitch += yOffset;
 
         if ( constrainPitch )
         {
-            camera.Pitch = Math.Clamp( camera.Pitch, -89.0f, 89.0f );
+            if ( camera.Pitch > 89.0f )
+                camera.Pitch = 89.0f;
+            if ( camera.Pitch < -89.0f )
+                camera.Pitch = -89.0f;
         }
 
-        UpdateCameraRotation( ref camera, ref transform );
+        UpdateCameraVectors( ref camera );
     }
 
-    public void ProcessMouseScroll( ref Camera camera, float yOffset )
+    private void UpdateCameraVectors( ref Camera camera )
     {
-        if ( camera.ProjectionType == ProjectionType.Perspective )
-        {
-            camera.FieldOfView -= yOffset * camera.ZoomSpeed;
-            camera.FieldOfView = Math.Clamp( camera.FieldOfView, 1.0f, 45.0f );
-        }
-        else
-        {
-            camera.OrthographicSize -= yOffset * camera.ZoomSpeed;
-            camera.OrthographicSize = Math.Max( camera.OrthographicSize, 0.1f );
-        }
-    }
+        float yawRad = camera.Yaw * ( MathF.PI / 180.0f );
+        float pitchRad = camera.Pitch * ( MathF.PI / 180.0f );
 
-    private static void UpdateCameraRotation( ref Camera camera, ref Transform transform )
-    {
-        float yawRad = MathExtensions.DegToRad( camera.Yaw );
-        float pitchRad = MathExtensions.DegToRad( camera.Pitch );
+        Vector3D<float> forward;
+        forward.X = MathF.Cos( yawRad ) * MathF.Cos( pitchRad );
+        forward.Y = MathF.Sin( pitchRad );
+        forward.Z = MathF.Sin( yawRad ) * MathF.Cos( pitchRad );
 
-        Quaternion<float> yawRotation = Quaternion<float>.CreateFromAxisAngle( Vector3D<float>.UnitY, yawRad );
-        Quaternion<float> pitchRotation = Quaternion<float>.CreateFromAxisAngle( Vector3D<float>.UnitX, pitchRad );
-
-        transform.Rotation = yawRotation * pitchRotation;
+        camera.Forward = Vector3D.Normalize( forward );
+        camera.Right = Vector3D.Normalize( Vector3D.Cross( camera.Forward, Vector3D<float>.UnitY ) );
+        camera.Up = Vector3D.Normalize( Vector3D.Cross( camera.Right, camera.Forward ) );
     }
 }

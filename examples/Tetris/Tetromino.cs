@@ -1,5 +1,5 @@
 using Silk.NET.Maths;
-using GameUtils.Helpers;
+using Aether.Core.Utilities;
 using Tetris.Components;
 
 namespace Tetris;
@@ -10,52 +10,136 @@ public static class Tetromino
     {
         [ TetrominoType.I ] =
         [
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 3, 1 ) ], // Horizontal
-            [ new Vector2D<float>( 2, 0 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 2, 3 ) ], // Vertical
-            [ new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 3, 2 ) ], // Horizontal
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 3 ) ] // Vertical
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 3, 1 )
+            ], // Horizontal
+            [
+                new Vector2D<float>( 2, 0 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ),
+                new Vector2D<float>( 2, 3 )
+            ], // Vertical
+            [
+                new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ),
+                new Vector2D<float>( 3, 2 )
+            ], // Horizontal
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 1, 3 )
+            ] // Vertical
         ],
         [ TetrominoType.O ] =
         [
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ]
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 2 )
+            ],
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 2 )
+            ],
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 2 )
+            ],
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 2 )
+            ]
         ],
         [ TetrominoType.T ] =
         [
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 2 ) ], // T pointing up
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 1 ) ], // T pointing right
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 1, 0 ) ], // T pointing down
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 1 ) ] // T pointing left
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 1, 2 )
+            ], // T pointing up
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 1 )
+            ], // T pointing right
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 1, 0 )
+            ], // T pointing down
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 0, 1 )
+            ] // T pointing left
         ],
         [ TetrominoType.S ] =
         [
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 0 ), new Vector2D<float>( 1, 0 ) ],
-            [ new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 2, 3 ) ],
-            [ new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ) ],
-            [ new Vector2D<float>( 0, 0 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ) ]
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 0 ),
+                new Vector2D<float>( 1, 0 )
+            ],
+            [
+                new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ),
+                new Vector2D<float>( 2, 3 )
+            ],
+            [
+                new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 0, 1 ),
+                new Vector2D<float>( 1, 1 )
+            ],
+            [
+                new Vector2D<float>( 0, 0 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ),
+                new Vector2D<float>( 1, 2 )
+            ]
         ],
         [ TetrominoType.Z ] =
         [
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ), new Vector2D<float>( 2, 0 ) ],
-            [ new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 3 ) ],
-            [ new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ) ],
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ), new Vector2D<float>( 0, 2 ) ]
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 0 ),
+                new Vector2D<float>( 2, 0 )
+            ],
+            [
+                new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 1, 3 )
+            ],
+            [
+                new Vector2D<float>( 0, 2 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 1, 1 ),
+                new Vector2D<float>( 2, 1 )
+            ],
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 0, 1 ),
+                new Vector2D<float>( 0, 2 )
+            ]
         ],
         [ TetrominoType.J ] =
         [
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 0 ) ],
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 0 ) ],
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 2 ) ],
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 2 ) ]
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 0, 0 )
+            ],
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 0 )
+            ],
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 2, 2 )
+            ],
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 0, 2 )
+            ]
         ],
         [ TetrominoType.L ] =
         [
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 2, 0 ) ],
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 2, 2 ) ],
-            [ new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ), new Vector2D<float>( 0, 2 ) ],
-            [ new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ), new Vector2D<float>( 0, 0 ) ]
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 2, 0 )
+            ],
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 2, 2 )
+            ],
+            [
+                new Vector2D<float>( 0, 1 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 2, 1 ),
+                new Vector2D<float>( 0, 2 )
+            ],
+            [
+                new Vector2D<float>( 1, 0 ), new Vector2D<float>( 1, 1 ), new Vector2D<float>( 1, 2 ),
+                new Vector2D<float>( 0, 0 )
+            ]
         ]
     };
 
@@ -86,7 +170,7 @@ public static class Tetromino
     public static Vector4D<float> GetColor( int colorIndex )
     {
         if ( colorIndex == 0 )
-            return new Vector4D<float>( 0.3f, 0.3f, 0.3f, 1 ); // Gray for empty
+            return new Vector4D<float>( 0.3f, 0.3f, 0.3f, 1 );
 
         return ColorPalette.GetColor( ColorPalette.Tetris, colorIndex - 1 );
     }

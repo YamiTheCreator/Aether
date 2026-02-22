@@ -1,95 +1,96 @@
 using Aether.Core;
-using Graphics.Components;
-using Graphics.Systems;
+using Graphics;
 using Silk.NET.Input;
 using Tetris.Components;
 
 namespace Tetris.Systems;
 
-/// <summary>
-/// System responsible for handling player input
-/// </summary>
 public class TetrisInputSystem : SystemBase
 {
     private TetrisLogicSystem? _logicSystem;
-    private const float MoveDelay = 0.15f;
-    private const float RotateDelay = 0.2f;
+    private const float _moveDelay = 0.15f;
+    private const float _rotateDelay = 0.2f;
 
-    protected override void OnInit()
-    {
-        // Get reference to logic system
-        _logicSystem = null;
-        foreach (SystemBase system in World.GetType().GetField("_updateSystems",
-                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                 ?.GetValue(World) as List<SystemBase> ?? [])
-        {
-            if (system is TetrisLogicSystem logicSystem)
-            {
-                _logicSystem = logicSystem;
-                break;
-            }
-        }
-    }
+    private readonly HashSet<Key> _pressedKeys = [ ];
 
-    protected override void OnUpdate(float deltaTime)
+    protected override void OnUpdate( float deltaTime )
     {
-        if (_logicSystem == null)
+        _logicSystem ??= World.GetSystem<TetrisLogicSystem>();
+        if ( _logicSystem == null )
             return;
 
-        InputSystem inputSystem = World.GetGlobal<InputSystem>();
-        Input input = World.GetGlobal<Input>();
+        IKeyboard keyboard = WindowBase.Input.Keyboards[ 0 ];
 
-        foreach (Entity entity in World.Filter<TetrisGameStateComponent>().With<TetrisTimerComponent>())
+        foreach ( Entity entity in World.Filter<TetrisGameStateComponent>().With<TetrisTimerComponent>() )
         {
-            if (!World.Has<TetrisPieceComponent>(entity) || !World.Has<TetrisBoardComponent>(entity))
+            if ( !World.Has<TetrisPieceComponent>( entity ) || !World.Has<TetrisBoardComponent>( entity ) )
                 continue;
-            
-            ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>(entity);
-            ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>(entity);
 
-            if (state.IsGameOver)
+            ref TetrisGameStateComponent state = ref World.Get<TetrisGameStateComponent>( entity );
+            ref TetrisTimerComponent timers = ref World.Get<TetrisTimerComponent>( entity );
+
+            if ( state.IsGameOver )
             {
-                if (inputSystem.IsKeyPressed(input, Key.R))
+                if ( IsKeyPressed( keyboard, Key.R ) )
                 {
                     _logicSystem.ResetGame();
                 }
+
                 return;
             }
 
-            // Left movement
-            if (inputSystem.IsKeyPressed(input, Key.Left) || 
-                (inputSystem.IsKeyDown(input, Key.Left) && timers.MoveTimer <= 0))
+            if ( IsKeyPressed( keyboard, Key.Left ) ||
+                 ( keyboard.IsKeyPressed( Key.Left ) && timers.MoveTimer <= 0 ) )
             {
-                _logicSystem.TryMovePiece(entity, -1, 0);
-                timers.MoveTimer = MoveDelay;
+                _logicSystem.TryMovePiece( entity, -1, 0 );
+                timers.MoveTimer = _moveDelay;
             }
 
-            // Right movement
-            if (inputSystem.IsKeyPressed(input, Key.Right) || 
-                (inputSystem.IsKeyDown(input, Key.Right) && timers.MoveTimer <= 0))
+            if ( IsKeyPressed( keyboard, Key.Right ) ||
+                 ( keyboard.IsKeyPressed( Key.Right ) && timers.MoveTimer <= 0 ) )
             {
-                _logicSystem.TryMovePiece(entity, 1, 0);
-                timers.MoveTimer = MoveDelay;
+                _logicSystem.TryMovePiece( entity, 1, 0 );
+                timers.MoveTimer = _moveDelay;
             }
 
-            // Soft drop (down key)
-            if (inputSystem.IsKeyDown(input, Key.Down))
+            if ( keyboard.IsKeyPressed( Key.Down ) )
             {
                 timers.DropTimer += deltaTime * 10f;
             }
 
-            // Rotation
-            if ((inputSystem.IsKeyPressed(input, Key.Up) || inputSystem.IsKeyPressed(input, Key.Z)) && 
-                timers.RotateTimer <= 0)
+            if ( ( IsKeyPressed( keyboard, Key.Up ) || IsKeyPressed( keyboard, Key.Z ) ) &&
+                 timers.RotateTimer <= 0 )
             {
-                _logicSystem.TryRotatePiece(entity);
-                timers.RotateTimer = RotateDelay;
+                _logicSystem.TryRotatePiece( entity );
+                timers.RotateTimer = _rotateDelay;
             }
 
             // Hard drop
-            if (inputSystem.IsKeyPressed(input, Key.Space))
+            if ( IsKeyPressed( keyboard, Key.Space ) )
             {
-                _logicSystem.HardDrop(entity);
+                _logicSystem.HardDrop( entity );
+            }
+        }
+
+        UpdatePressedKeys( keyboard );
+    }
+
+    private bool IsKeyPressed( IKeyboard keyboard, Key key )
+    {
+        bool isDown = keyboard.IsKeyPressed( key );
+        bool wasPressed = _pressedKeys.Contains( key );
+
+        return isDown && !wasPressed;
+    }
+
+    private void UpdatePressedKeys( IKeyboard keyboard )
+    {
+        _pressedKeys.Clear();
+        foreach ( Key key in keyboard.SupportedKeys )
+        {
+            if ( keyboard.IsKeyPressed( key ) )
+            {
+                _pressedKeys.Add( key );
             }
         }
     }

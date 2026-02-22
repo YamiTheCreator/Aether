@@ -1,16 +1,28 @@
-#version 330 core
+#version 410 core
 
-layout (location = 0) in vec3 aPosition;  // Позиция вершины
-layout (location = 1) in vec2 aTexCoord;  // UV для текстуры
-layout (location = 2) in vec4 aColor;     // Цвет вершины
+layout (location = 0) in vec3 aPosition;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec4 aColor;
+layout (location = 4) in vec3 aNormal;
 
-uniform mat4 uViewProjection;  // Объединенная матрица view * projection
+// Camera uniforms (no UBO)
+uniform mat4 uViewProjection;
+uniform mat4 uModel;
 
-out vec2 vTexCoord;  // UV для fragment shader
-out vec4 vColor;     // Цвет для fragment shader
+// Outputs
+out vec3 WorldPos;
+out vec3 Normal;
+out vec2 TexCoords;
+out vec4 vColor;
 
 void main() {
-    gl_Position = uViewProjection * vec4(aPosition, 1.0);
-    vTexCoord = aTexCoord;
+    WorldPos = vec3(uModel * vec4(aPosition, 1.0));
+    
+    // Transform and normalize normal
+    Normal = normalize(mat3(uModel) * aNormal);
+    
+    TexCoords = aTexCoord;
     vColor = aColor;
+    
+    gl_Position = uViewProjection * vec4(WorldPos, 1.0);
 }

@@ -16,7 +16,7 @@ public class FontSystem
         _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
     }
 
-    public unsafe FontComponent CreateFont(float fontSize = 48f, string fontPath = "src/Graphics/Text/Fonts/Strogo.ttf")
+    public unsafe FontComponent CreateFont(float fontSize = 48f, string fontPath = "src/Graphics/Assets/Fonts/Strogo.ttf")
     {
         string basePath = AppDomain.CurrentDomain.BaseDirectory;
         string solutionRoot = Path.GetFullPath(Path.Combine(basePath, "../../../../../"));
@@ -107,13 +107,15 @@ public class FontSystem
         if (width <= 0 || height <= 0)
         {
             ReadOnlySpan<byte> emptyData = "\0\0\0\0"u8;
+            
+            // Use bind-based API (OpenGL 4.1 compatible)
             uint handle = _gl.GenTexture();
             _gl.BindTexture(TextureTarget.Texture2D, handle);
 
             fixed (byte* ptr = emptyData)
             {
-                _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, 1, 1, 0,
-                    PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
+                _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, 1, 1, 
+                    0, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
             }
 
             SetTextureParameters();
@@ -144,20 +146,22 @@ public class FontSystem
                 int srcIndex = y * width + x;
                 int dstIndex = (height - 1 - y) * width + x;
                 byte alpha = bitmap[srcIndex];
-                rgbaData[dstIndex * 4 + 0] = 255;
-                rgbaData[dstIndex * 4 + 1] = 255;
-                rgbaData[dstIndex * 4 + 2] = 255;
-                rgbaData[dstIndex * 4 + 3] = alpha;
+                // Используем premultiplied alpha для правильного блендинга
+                rgbaData[dstIndex * 4 + 0] = alpha;  // R = alpha (белый * alpha)
+                rgbaData[dstIndex * 4 + 1] = alpha;  // G = alpha
+                rgbaData[dstIndex * 4 + 2] = alpha;  // B = alpha
+                rgbaData[dstIndex * 4 + 3] = alpha;  // A = alpha
             }
         }
 
+        // Use bind-based API (OpenGL 4.1 compatible)
         uint textureHandle = _gl.GenTexture();
         _gl.BindTexture(TextureTarget.Texture2D, textureHandle);
 
         fixed (byte* ptr = rgbaData)
         {
-            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba,
-                (uint)width, (uint)height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
+            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)width, (uint)height, 
+                0, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
         }
 
         SetTextureParameters();
@@ -168,13 +172,10 @@ public class FontSystem
 
     private void SetTextureParameters()
     {
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-            (int)TextureWrapMode.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-            (int)TextureWrapMode.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-            (int)TextureMinFilter.Linear);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-            (int)TextureMagFilter.Linear);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
     }
+
 }

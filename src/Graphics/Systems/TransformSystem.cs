@@ -28,10 +28,17 @@ public class TransformSystem
         transform.Forward = Vector3D.Transform( -Vector3D<float>.UnitZ, transform.Rotation );
 
     public Vector3D<float> SetRightVector( ref Transform transform ) =>
-        transform.Right = Vector3D.Transform( -Vector3D<float>.UnitX, transform.Rotation );
+        transform.Right = Vector3D.Transform( Vector3D<float>.UnitX, transform.Rotation );
 
     public Vector3D<float> SetUpVector( ref Transform transform ) =>
-        transform.Up = Vector3D.Transform( -Vector3D<float>.UnitY, transform.Rotation );
+        transform.Up = Vector3D.Transform( Vector3D<float>.UnitY, transform.Rotation );
+
+    public static void UpdateDirectionVectors( ref Transform transform )
+    {
+        transform.Forward = Vector3D.Transform( -Vector3D<float>.UnitZ, transform.Rotation );
+        transform.Right = Vector3D.Transform( Vector3D<float>.UnitX, transform.Rotation );
+        transform.Up = Vector3D.Transform( Vector3D<float>.UnitY, transform.Rotation );
+    }
 
     public static Matrix4X4<float> GetWorldMatrix( ref Transform transform )
     {
@@ -45,6 +52,14 @@ public class TransformSystem
 
         transform.IsDirty = false;
         return transform.CachedMatrix;
+    }
+
+    public static Matrix4X4<float> CreateModelMatrix( Vector3D<float> position, Quaternion<float> rotation,
+        Vector3D<float> scale )
+    {
+        return Matrix4X4.CreateScale( scale ) *
+               Matrix4X4.CreateFromQuaternion( rotation ) *
+               Matrix4X4.CreateTranslation( position );
     }
 
     public static Matrix4X4<float> GetLocalMatrix( ref Transform transform )

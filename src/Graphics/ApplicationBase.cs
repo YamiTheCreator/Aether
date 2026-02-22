@@ -50,7 +50,6 @@ public abstract class ApplicationBase(
     {
         World.SetGlobal( WindowBase );
 
-        // Initialize Input System
         _inputSystem = new InputSystem();
         _input = _inputSystem.CreateInput( WindowBase.Input );
         World.SetGlobal( _input );
@@ -70,13 +69,11 @@ public abstract class ApplicationBase(
 
     private void OnUpdate( double deltaTime )
     {
-        // Update input state
         _inputSystem.Update( ref _input );
-        World.SetGlobal( _input ); // Update global input state
+        World.SetGlobal( _input );
 
         World.Update( ( float )deltaTime );
 
-        // Check for Escape key to close window
         if ( _inputSystem.IsKeyDown( _input, Key.Escape ) )
         {
             WindowBase.Close();
@@ -94,8 +91,8 @@ public abstract class ApplicationBase(
 
     private void OnClosing()
     {
-        if ( World.HasGlobal<Renderer2D>() )
-            World.GetGlobal<Renderer2D>().Dispose();
+        RenderSystem? renderSystem = World.GetSystem<RenderSystem>();
+        renderSystem?.Dispose();
 
         World.Dispose();
     }
