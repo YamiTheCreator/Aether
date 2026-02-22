@@ -26,9 +26,13 @@ public class ArrayObject : IDisposable
     public unsafe void SetVertexAttribute( uint index, int size, VertexAttribPointerType type, bool normalized,
         uint stride, int offset )
     {
-        Bind();
-        _gl.VertexAttribPointer( index, size, type, normalized, stride, ( void* )offset );
         _gl.EnableVertexAttribArray( index );
+        _gl.VertexAttribPointer( index, size, type, normalized, stride, ( void* )offset );
+    }
+
+    public void BindElementBuffer( uint buffer )
+    {
+        _gl.BindBuffer( BufferTargetARB.ElementArrayBuffer, buffer );
     }
 
     public void Dispose()

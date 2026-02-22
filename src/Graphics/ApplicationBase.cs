@@ -1,6 +1,5 @@
 using Silk.NET.Maths;
 using Aether.Core;
-using Aether.Core.Enums;
 using Aether.Core.Options;
 using Graphics.Components;
 using Graphics.Systems;
@@ -14,13 +13,12 @@ public abstract class ApplicationBase(
     int width,
     int height,
     BaseOptions? worldOptions = null,
-    bool fullScreen = false,
-    bool createDefaultCamera = true )
+    bool fullScreen = false )
 {
     private WindowBase WindowBase { get; set; } = null!;
     protected World World { get; private set; } = null!;
     private InputSystem _inputSystem = null!;
-    private Components.Input _input;
+    private Input _input = null!;
 
     private readonly WindowOptions _windowOptions = new()
     {
@@ -50,16 +48,10 @@ public abstract class ApplicationBase(
     {
         World.SetGlobal( WindowBase );
 
-        // Initialize Input System
         _inputSystem = new InputSystem();
         _input = _inputSystem.CreateInput( WindowBase.Input );
         World.SetGlobal( _input );
         World.SetGlobal( _inputSystem );
-
-        if ( createDefaultCamera )
-        {
-            CreateDefaultCamera();
-        }
 
         OnInitialize();
 
@@ -70,13 +62,10 @@ public abstract class ApplicationBase(
 
     private void OnUpdate( double deltaTime )
     {
-        // Update input state
-        _inputSystem.Update( ref _input );
-        World.SetGlobal( _input ); // Update global input state
+        _inputSystem.Update( _input );
 
         World.Update( ( float )deltaTime );
 
-        // Check for Escape key to close window
         if ( _inputSystem.IsKeyDown( _input, Key.Escape ) )
         {
             WindowBase.Close();
@@ -94,91 +83,6 @@ public abstract class ApplicationBase(
 
     private void OnClosing()
     {
-        if ( World.HasGlobal<Renderer2D>() )
-            World.GetGlobal<Renderer2D>().Dispose();
-
         World.Dispose();
-    }
-
-    private Entity CreateDefaultCamera()
-    {
-        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
-
-        Entity cameraEntity = World.Spawn(
-            new Transform( new Vector3D<float>( 0, 0, 0 ) ),
-            new Camera
-            {
-                ProjectionType = ProjectionType.Orthographic,
-                AspectRatio = aspectRatio,
-                OrthographicSize = 10f,
-                NearPlane = 0.1f,
-                FarPlane = 100f
-            } );
-
-        return cameraEntity;
-    }
-
-    protected Entity CreateStaticCamera( Vector3D<float> position, float size = 10f )
-    {
-        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
-
-        Entity cameraEntity = World.Spawn(
-            new Transform( Vector3D<float>.Zero ),
-            new Camera
-            {
-                ProjectionType = ProjectionType.Orthographic,
-                AspectRatio = aspectRatio,
-                OrthographicSize = size,
-                NearPlane = 0.1f,
-                FarPlane = 100f,
-                IsStatic = true,
-                StaticPosition = position
-            } );
-
-        return cameraEntity;
-    }
-
-    protected Entity CreatePerspectiveCamera(
-        Vector3D<float> position,
-        float fov = 45f,
-        float nearPlane = 0.1f,
-        float farPlane = 100f )
-    {
-        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
-
-        Entity cameraEntity = World.Spawn(
-            new Transform( position ),
-            new Camera
-            {
-                ProjectionType = ProjectionType.Perspective,
-                FieldOfView = fov,
-                AspectRatio = aspectRatio,
-                NearPlane = nearPlane,
-                FarPlane = farPlane
-            } );
-
-        return cameraEntity;
-    }
-
-    protected Entity CreateOrthographicCamera(
-        Vector3D<float> position,
-        float size = 10f,
-        float nearPlane = 0.1f,
-        float farPlane = 100f )
-    {
-        float aspectRatio = ( float )WindowBase.Width / WindowBase.Height;
-
-        Entity cameraEntity = World.Spawn(
-            new Transform( position ),
-            new Camera
-            {
-                ProjectionType = ProjectionType.Orthographic,
-                OrthographicSize = size,
-                AspectRatio = aspectRatio,
-                NearPlane = nearPlane,
-                FarPlane = farPlane
-            } );
-
-        return cameraEntity;
     }
 }

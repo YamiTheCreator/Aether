@@ -1,3 +1,4 @@
+using Aether.Core;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Graphics.Structures;
@@ -5,18 +6,23 @@ using ShaderComponent = Graphics.Components.Shader;
 
 namespace Graphics.Systems;
 
-public class ShaderSystem( GL gl )
+public class ShaderSystem( GL gl ) : SystemBase
 {
-    public ShaderComponent CreateShader(string vertexPath = "src/Graphics/Shaders/shader.vert", 
-        string fragmentPath = "src/Graphics/Shaders/shader.frag")
+    private ShaderComponent? _basicShader;
+    private ShaderComponent? _pbrShader;
+
+    public ShaderComponent CreateShader( string vertexPath = "src/Graphics/Assets/Shaders/shader.vert",
+        string fragmentPath = "src/Graphics/Assets/Shaders/shader.frag",
+        string? geometryPath = null )
     {
         string basePath = AppDomain.CurrentDomain.BaseDirectory;
-        string solutionRoot = Path.GetFullPath(Path.Combine(basePath, "../../../../../"));
+        string solutionRoot = Path.GetFullPath( Path.Combine( basePath, "../../../../../" ) );
 
-        string fullVertexPath = Path.Combine(solutionRoot, vertexPath);
-        string fullFragmentPath = Path.Combine(solutionRoot, fragmentPath);
+        string fullVertexPath = Path.Combine( solutionRoot, vertexPath );
+        string fullFragmentPath = Path.Combine( solutionRoot, fragmentPath );
+        string? fullGeometryPath = geometryPath != null ? Path.Combine( solutionRoot, geometryPath ) : null;
 
-        ShaderProgram program = new ShaderProgram(gl, fullVertexPath, fullFragmentPath);
+        ShaderProgram program = new( gl, fullVertexPath, fullFragmentPath, fullGeometryPath );
 
         return new ShaderComponent
         {
@@ -24,43 +30,65 @@ public class ShaderSystem( GL gl )
         };
     }
 
-    public void UseShader(ShaderComponent shader)
+    public ShaderComponent? GetBasicShader()
     {
-        shader.Program?.Use();
+        if ( !_basicShader.HasValue )
+        {
+            _basicShader = CreateShader(
+                "src/Graphics/Assets/Shaders/shader.vert",
+                "src/Graphics/Assets/Shaders/basic.frag" );
+        }
+        return _basicShader;
     }
 
-    public void SetUniform(ShaderComponent shader, string name, int value)
+    public ShaderComponent? GetPbrShader()
     {
-        shader.Program?.SetUniform(name, value);
+        if ( !_pbrShader.HasValue )
+        {
+            _pbrShader = CreateShader(
+                "src/Graphics/Assets/Shaders/shader.vert",
+                "src/Graphics/Assets/Shaders/pbr.frag" );
+        }
+        return _pbrShader;
     }
 
-    public void SetUniform(ShaderComponent shader, string name, Matrix4X4<float> value)
+    public void UseShader( ShaderComponent shader )
     {
-        shader.Program?.SetUniform(name, value);
+        shader.Program.Use();
     }
 
-    public void SetUniform(ShaderComponent shader, string name, float value)
+    public void SetUniform( ShaderComponent shader, string name, int value )
     {
-        shader.Program?.SetUniform(name, value);
+        shader.Program.SetUniform( name, value );
     }
 
-    public void SetUniform(ShaderComponent shader, string name, Vector2D<float> value)
+    public void SetUniform( ShaderComponent shader, string name, Matrix4X4<float> value )
     {
-        shader.Program?.SetUniform(name, value);
+        shader.Program.SetUniform( name, value );
     }
 
-    public void SetUniform(ShaderComponent shader, string name, Vector3D<float> value)
+    public void SetUniform( ShaderComponent shader, string name, float value )
     {
-        shader.Program?.SetUniform(name, value);
+        shader.Program.SetUniform( name, value );
     }
 
-    public void SetUniform(ShaderComponent shader, string name, Vector4D<float> value)
+    public void SetUniform( ShaderComponent shader, string name, Vector2D<float> value )
     {
-        shader.Program?.SetUniform(name, value);
+        shader.Program.SetUniform( name, value );
     }
 
-    public void DeleteShader(ShaderComponent shader)
+    public void SetUniform( ShaderComponent shader, string name, Vector3D<float> value )
     {
-        shader.Program?.Dispose();
+        shader.Program.SetUniform( name, value );
+    }
+
+    public void SetUniform( ShaderComponent shader, string name, Vector4D<float> value )
+    {
+        shader.Program.SetUniform( name, value );
+    }
+
+    public void DeleteShader( ShaderComponent shader )
+    {
+        shader.Program.Dispose();
     }
 }

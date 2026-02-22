@@ -1,3 +1,4 @@
+using Graphics.Structures;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -35,6 +36,14 @@ public sealed class WindowBase : IDisposable
         _window?.WindowState = fullscreen ? WindowState.Maximized : WindowState.Normal;
     }
 
+    public void SetTitle( string title )
+    {
+        if ( _window != null )
+        {
+            _window.Title = title;
+        }
+    }
+
     public WindowBase( WindowOptions? opts )
     {
         WindowOptions options = opts ?? WindowOptions.Default;
@@ -42,8 +51,8 @@ public sealed class WindowBase : IDisposable
         options.API = new GraphicsAPI(
             ContextAPI.OpenGL,
             ContextProfile.Core,
-            ContextFlags.Default,
-            new APIVersion( 3, 3 )
+            ContextFlags.ForwardCompatible,
+            new APIVersion( 4, 1 )
         );
 
         options.VSync = true;
@@ -78,7 +87,13 @@ public sealed class WindowBase : IDisposable
     }
 
     private void Update( double dt ) => OnUpdate?.Invoke( dt );
-    private void Render( double dt ) => OnRender?.Invoke( dt );
+
+    private void Render( double dt )
+    {
+        Gl.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
+
+        OnRender?.Invoke( dt );
+    }
 
     private void Resize( Vector2D<int> size )
     {

@@ -1,8 +1,13 @@
 <Solution>
     <Folder Name="/examples/">
-        <Project Path="examples/Tetris/Tetris.csproj" />
-        <Project Path="examples/ColorLines/ColorLines.csproj" />
-        <Project Path="examples/GameUtils/GameUtils.csproj" />
+        <Project Path="examples/MemoryTrainer/MemoryTrainer.csproj" />
+        <Project Path="examples/Ripple/Ripple.csproj" />
+        <Project Path="examples/SphereToTor/SphereToTor.csproj" />
+        <Project Path="examples/Maze/Maze.csproj" />
+        <Project Path="examples/Chess3D/Chess3D.csproj" />
+        <Project Path="examples/MathShapes2D/MathShapes2D.csproj" />
+        <Project Path="examples/Asteroids/Asteroids.csproj" />
+        <Project Path="examples/Camera3D/Camera3D.csproj" />
     </Folder>
     <Folder Name="/src/">
         <Project Path="src/Core/Core.csproj" />

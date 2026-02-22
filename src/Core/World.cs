@@ -53,7 +53,7 @@ public sealed class World : IDisposable
     {
         foreach ( SystemBase system in _systems )
         {
-            system.Init( this );
+            system.Create( this );
         }
     }
 
@@ -77,7 +77,7 @@ public sealed class World : IDisposable
     {
         foreach ( SystemBase system in _systems )
         {
-            system.Cleanup( this );
+            system.Destroy( this );
         }
     }
 
@@ -180,6 +180,24 @@ public sealed class World : IDisposable
     }
 
     public Filter<T> Filter<T>() where T : Component => new( this, GetPool<T>() );
+
+    public Filter<T1, T2> Filter<T1, T2>()
+        where T1 : Component
+        where T2 : Component
+        => new( this, GetPool<T1>() );
+
+    public Filter<T1, T2, T3> Filter<T1, T2, T3>()
+        where T1 : Component
+        where T2 : Component
+        where T3 : Component
+        => new( this, GetPool<T1>() );
+
+    public Filter<T1, T2, T3, T4> Filter<T1, T2, T3, T4>()
+        where T1 : Component
+        where T2 : Component
+        where T3 : Component
+        where T4 : Component
+        => new( this, GetPool<T1>() );
 
     public ComponentPoolImpl<T> GetPool<T>() where T : Component
     {

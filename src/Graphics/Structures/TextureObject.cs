@@ -20,6 +20,11 @@ public class TextureObject : IDisposable
         FilePath = filePath;
     }
 
+    public static TextureObject FromHandle( GL gl, uint handle, int width, int height )
+    {
+        return new TextureObject( gl, handle, width, height );
+    }
+
     public static unsafe TextureObject FromFile(
         GL gl,
         string path,
@@ -33,6 +38,8 @@ public class TextureObject : IDisposable
         gl.BindTexture( TextureTarget.Texture2D, handle );
 
         int width, height;
+        byte[] imageData;
+
         using ( FileStream stream = File.OpenRead( path ) )
         {
             ImageResult image = ImageResult.FromStream( stream, ColorComponents.RedGreenBlueAlpha );
@@ -43,21 +50,13 @@ public class TextureObject : IDisposable
 
             width = image.Width;
             height = image.Height;
+            imageData = image.Data;
+        }
 
-            fixed ( byte* ptr = image.Data )
-            {
-                gl.TexImage2D(
-                    TextureTarget.Texture2D,
-                    0,
-                    InternalFormat.Rgba,
-                    ( uint )image.Width,
-                    ( uint )image.Height,
-                    0,
-                    PixelFormat.Rgba,
-                    PixelType.UnsignedByte,
-                    ptr
-                );
-            }
+        fixed ( byte* ptr = imageData )
+        {
+            gl.TexImage2D( TextureTarget.Texture2D, 0, InternalFormat.Rgba8, ( uint )width, ( uint )height, 0,
+                PixelFormat.Rgba, PixelType.UnsignedByte, ptr );
         }
 
         SetTextureParameters( gl, wrapS, wrapT, minFilter, magFilter );
@@ -70,6 +69,52 @@ public class TextureObject : IDisposable
         gl.BindTexture( TextureTarget.Texture2D, 0 );
 
         return new TextureObject( gl, handle, width, height, path );
+    }
+
+    public static unsafe TextureObject FromMemory(
+        GL gl,
+        byte[] data,
+        TextureWrapMode wrapS = TextureWrapMode.Repeat,
+        TextureWrapMode wrapT = TextureWrapMode.Repeat,
+        TextureMinFilter minFilter = TextureMinFilter.LinearMipmapLinear,
+        TextureMagFilter magFilter = TextureMagFilter.Linear,
+        bool generateMipmaps = true )
+    {
+        uint handle = gl.GenTexture();
+        gl.BindTexture( TextureTarget.Texture2D, handle );
+
+        int width, height;
+        byte[] imageData;
+
+        using ( MemoryStream stream = new MemoryStream( data ) )
+        {
+            ImageResult image = ImageResult.FromStream( stream, ColorComponents.RedGreenBlueAlpha );
+            if ( image.Width == 0 || image.Height == 0 )
+            {
+                throw new Exception( "Failed to load image from memory" );
+            }
+
+            width = image.Width;
+            height = image.Height;
+            imageData = image.Data;
+        }
+
+        fixed ( byte* ptr = imageData )
+        {
+            gl.TexImage2D( TextureTarget.Texture2D, 0, InternalFormat.Rgba8, ( uint )width, ( uint )height, 0,
+                PixelFormat.Rgba, PixelType.UnsignedByte, ptr );
+        }
+
+        SetTextureParameters( gl, wrapS, wrapT, minFilter, magFilter );
+
+        if ( generateMipmaps )
+        {
+            gl.GenerateMipmap( TextureTarget.Texture2D );
+        }
+
+        gl.BindTexture( TextureTarget.Texture2D, 0 );
+
+        return new TextureObject( gl, handle, width, height );
     }
 
     public static unsafe TextureObject FromColor(
@@ -100,17 +145,8 @@ public class TextureObject : IDisposable
 
         fixed ( byte* ptr = data )
         {
-            gl.TexImage2D(
-                TextureTarget.Texture2D,
-                0,
-                InternalFormat.Rgba,
-                ( uint )width,
-                ( uint )height,
-                0,
-                PixelFormat.Rgba,
-                PixelType.UnsignedByte,
-                ptr
-            );
+            gl.TexImage2D( TextureTarget.Texture2D, 0, InternalFormat.Rgba8, ( uint )width, ( uint )height, 0,
+                PixelFormat.Rgba, PixelType.UnsignedByte, ptr );
         }
 
         SetTextureParameters( gl, wrapS, wrapT, minFilter, magFilter );

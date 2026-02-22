@@ -19,5 +19,5 @@ public struct Transform( Vector3D<float> position, Quaternion<float> rotation, V
     public Vector3D<float> Right;
     public Vector3D<float> Up;
 
-    public Transform( Vector3D<float> position ) : this( position, Quaternion<float>.Identity, Vector3D<float>.Zero ) { }
+    public Transform( Vector3D<float> position ) : this( position, Quaternion<float>.Identity, Vector3D<float>.One ) { }
 }

@@ -1,9 +1,10 @@
+using Aether.Core;
 using Silk.NET.Input;
 using InputComponent = Graphics.Components.Input;
 
 namespace Graphics.Systems;
 
-public class InputSystem
+public class InputSystem : SystemBase
 {
     public InputComponent CreateInput( IInputContext context )
     {
@@ -21,7 +22,28 @@ public class InputSystem
 
     private static readonly Key[] _allKeys = Enum.GetValues<Key>();
 
-    public void Update( ref InputComponent input )
+    protected override void OnCreate()
+    {
+    }
+
+    protected override void OnUpdate( float deltaTime )
+    {
+        if ( World.HasGlobal<InputComponent>() )
+        {
+            InputComponent input = World.GetGlobal<InputComponent>();
+            Update( input );
+        }
+    }
+
+    protected override void OnRender()
+    {
+    }
+
+    protected override void OnDestroy()
+    {
+    }
+
+    public void Update( InputComponent input )
     {
         input.PreviousKeys.Clear();
         foreach ( Key key in input.CurrentKeys )
@@ -42,7 +64,6 @@ public class InputSystem
             }
             catch
             {
-                // Some keys might not be supported by the driver/OS
             }
         }
     }

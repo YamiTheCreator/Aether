@@ -4,18 +4,18 @@ public abstract class SystemBase
 {
     protected World World { get; private set; } = null!;
 
-    protected virtual void OnInit() { }
+    protected virtual void OnCreate() { }
     
     protected virtual void OnUpdate( float deltaTime ) { }
     
     protected virtual void OnRender() { }
     
-    protected virtual void OnCleanup() { }
+    protected virtual void OnDestroy() { }
     
-    internal void Init( World world )
+    internal void Create( World world )
     {
         World = world;
-        OnInit();
+        OnCreate();
     }
 
     internal void Update( World world, float deltaTime )
@@ -30,9 +30,9 @@ public abstract class SystemBase
         OnRender();
     }
 
-    internal void Cleanup( World world )
+    internal void Destroy( World world )
     {
         World = world;
-        OnCleanup();
+        OnDestroy();
     }
 }
