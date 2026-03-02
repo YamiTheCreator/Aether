@@ -34,16 +34,16 @@ public class Application
     private void OnLoad()
     {
         _world = new World();
-        
+
         InputSystem inputSystem = new();
-        Graphics.Components.Input input = inputSystem.CreateInput( WindowBase.Input );
-        
+        Input input = inputSystem.CreateInput( WindowBase.Input );
+
         TextureObject whiteTextureObj = TextureObject.FromColor( WindowBase.Gl, 1, 1 );
         Texture2D whiteTexture = new()
         {
             Texture = whiteTextureObj
         };
-        
+
         _world.AddSystem( new ShaderSystem( WindowBase.Gl ) );
         _world.AddSystem( new MaterialSystem() );
         _world.AddSystem( inputSystem );
@@ -69,7 +69,6 @@ public class Application
         _world.Spawn( WorldBounds.Default );
         _world.Spawn( BulletConfig.Default );
 
-        // Создаем ортографическую камеру
         CameraSystem.CreateOrthographicCamera(
             _world,
             position: new Vector3D<float>( 0, 0, 0 )

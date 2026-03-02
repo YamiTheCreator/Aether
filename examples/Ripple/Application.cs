@@ -4,7 +4,6 @@ using Graphics;
 using Graphics.Components;
 using Graphics.Systems;
 using Graphics.Structures;
-using Ripple.Components;
 using Ripple.Systems;
 
 namespace Ripple;
@@ -61,7 +60,7 @@ public class Application() : ApplicationBase(
         CameraSystem.CreateOrthographicCamera(
             World,
             position: new Vector3D<float>( 0f, 0f, 5f ),
-            size: 1f,
+            size: 2f,
             aspectRatio: ( float )WindowBase.LogicalWidth / WindowBase.LogicalHeight
         );
 

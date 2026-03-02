@@ -208,7 +208,7 @@ public class Application() : ApplicationBase(
     {
         return new[,]
         {
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
             { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 },
             { 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
             { 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1 },
@@ -222,7 +222,7 @@ public class Application() : ApplicationBase(
             { 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1 },
             { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1 },
             { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 }
         };
     }
 
@@ -263,9 +263,9 @@ public class Application() : ApplicationBase(
         List<Vertex> vertices = [ ];
         List<uint> indices = [ ];
 
-        float radius = 50.0f;
-        int segments = 32;
-        int rings = 16;
+        const float radius = 50.0f;
+        const int segments = 32;
+        const int rings = 16;
         Vector4D<float> white = new( 1, 1, 1, 1 );
 
         for ( int ring = 0; ring <= rings; ring++ )

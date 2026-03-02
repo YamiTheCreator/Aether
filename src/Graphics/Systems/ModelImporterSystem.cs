@@ -61,36 +61,68 @@ public class ModelImporterSystem(
     private Entity ProcessMesh( World world, Assimp.Mesh mesh, Scene scene, string directory,
         Matrix4x4 globalTransform )
     {
+        List<Vertex> vertices = ExtractVertices( mesh );
+        List<uint> indices = ExtractIndices( mesh );
+        Components.Material material = ProcessMaterial( scene.Materials[ mesh.MaterialIndex ], scene, directory );
+
+        return CreateMeshEntity( world, vertices, indices, material, globalTransform );
+    }
+
+    private List<Vertex> ExtractVertices( Assimp.Mesh mesh )
+    {
         List<Vertex> vertices = [ ];
-        List<uint> indices = [ ];
 
         for ( int i = 0; i < mesh.VertexCount; i++ )
         {
-            Vector3D<float> vertexPosition = new(
-                mesh.Vertices[ i ].X,
-                mesh.Vertices[ i ].Y,
-                mesh.Vertices[ i ].Z
-            );
+            Vector3D<float> position = ExtractVertexPosition( mesh, i );
+            Vector2D<float> texCoords = ExtractTexCoords( mesh, i );
+            Vector4D<float> color = ExtractVertexColor( mesh, i );
+            Vector3D<float> normal = ExtractNormal( mesh, i );
 
-            Vector2D<float> texCoords = mesh.HasTextureCoords( 0 )
-                ? new Vector2D<float>( mesh.TextureCoordinateChannels[ 0 ][ i ].X,
-                    mesh.TextureCoordinateChannels[ 0 ][ i ].Y )
-                : Vector2D<float>.Zero;
-
-            Vector4D<float> color = mesh.HasVertexColors( 0 )
-                ? new Vector4D<float>(
-                    mesh.VertexColorChannels[ 0 ][ i ].R,
-                    mesh.VertexColorChannels[ 0 ][ i ].G,
-                    mesh.VertexColorChannels[ 0 ][ i ].B,
-                    mesh.VertexColorChannels[ 0 ][ i ].A )
-                : new Vector4D<float>( 1f, 1f, 1f, 1f );
-
-            Vector3D<float> normal = mesh.HasNormals
-                ? new Vector3D<float>( mesh.Normals[ i ].X, mesh.Normals[ i ].Y, mesh.Normals[ i ].Z )
-                : new Vector3D<float>( 0, 1, 0 );
-
-            vertices.Add( new Vertex( vertexPosition, texCoords, color, 0, normal ) );
+            vertices.Add( new Vertex( position, texCoords, color, 0, normal ) );
         }
+
+        return vertices;
+    }
+
+    private Vector3D<float> ExtractVertexPosition( Assimp.Mesh mesh, int index )
+    {
+        return new Vector3D<float>(
+            mesh.Vertices[ index ].X,
+            mesh.Vertices[ index ].Y,
+            mesh.Vertices[ index ].Z
+        );
+    }
+
+    private Vector2D<float> ExtractTexCoords( Assimp.Mesh mesh, int index )
+    {
+        return mesh.HasTextureCoords( 0 )
+            ? new Vector2D<float>( mesh.TextureCoordinateChannels[ 0 ][ index ].X,
+                mesh.TextureCoordinateChannels[ 0 ][ index ].Y )
+            : Vector2D<float>.Zero;
+    }
+
+    private Vector4D<float> ExtractVertexColor( Assimp.Mesh mesh, int index )
+    {
+        return mesh.HasVertexColors( 0 )
+            ? new Vector4D<float>(
+                mesh.VertexColorChannels[ 0 ][ index ].R,
+                mesh.VertexColorChannels[ 0 ][ index ].G,
+                mesh.VertexColorChannels[ 0 ][ index ].B,
+                mesh.VertexColorChannels[ 0 ][ index ].A )
+            : new Vector4D<float>( 1f, 1f, 1f, 1f );
+    }
+
+    private Vector3D<float> ExtractNormal( Assimp.Mesh mesh, int index )
+    {
+        return mesh.HasNormals
+            ? new Vector3D<float>( mesh.Normals[ index ].X, mesh.Normals[ index ].Y, mesh.Normals[ index ].Z )
+            : new Vector3D<float>( 0, 1, 0 );
+    }
+
+    private List<uint> ExtractIndices( Assimp.Mesh mesh )
+    {
+        List<uint> indices = [ ];
 
         for ( int i = 0; i < mesh.FaceCount; i++ )
         {
@@ -101,20 +133,14 @@ public class ModelImporterSystem(
             }
         }
 
-        Components.Material material =
-            ProcessMaterial( scene.Materials[ mesh.MaterialIndex ], scene, directory );
+        return indices;
+    }
 
+    private Entity CreateMeshEntity( World world, List<Vertex> vertices, List<uint> indices,
+        Components.Material material, Matrix4x4 globalTransform )
+    {
         Entity entity = world.Spawn();
-
-        globalTransform.Decompose( out Assimp.Vector3D scale, out Quaternion rotation,
-            out Assimp.Vector3D position );
-
-        Transform transform = new()
-        {
-            Position = new Vector3D<float>( position.X, position.Y, position.Z ),
-            Rotation = new Quaternion<float>( rotation.X, rotation.Y, rotation.Z, rotation.W ),
-            Scale = new Vector3D<float>( scale.X, scale.Y, scale.Z )
-        };
+        Transform transform = ExtractTransform( globalTransform );
 
         world.Add( entity, transform );
         world.Add( entity, meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), material ) );
@@ -123,10 +149,34 @@ public class ModelImporterSystem(
         return entity;
     }
 
+    private Transform ExtractTransform( Matrix4x4 globalTransform )
+    {
+        globalTransform.Decompose( out Assimp.Vector3D scale, out Quaternion rotation,
+            out Assimp.Vector3D position );
+
+        return new Transform
+        {
+            Position = new Vector3D<float>( position.X, position.Y, position.Z ),
+            Rotation = new Quaternion<float>( rotation.X, rotation.Y, rotation.Z, rotation.W ),
+            Scale = new Vector3D<float>( scale.X, scale.Y, scale.Z )
+        };
+    }
+
     private Components.Material ProcessMaterial( Assimp.Material assimpMaterial,
         Scene scene, string directory )
     {
-        Components.Material material = new()
+        Components.Material material = CreateDefaultMaterial();
+
+        ExtractMaterialColors( assimpMaterial, ref material );
+        ExtractMaterialProperties( assimpMaterial, ref material );
+        LoadMaterialTextures( assimpMaterial, scene, directory, ref material );
+
+        return material;
+    }
+
+    private Components.Material CreateDefaultMaterial()
+    {
+        return new Components.Material
         {
             DiffuseColor = new Vector3D<float>( 0.8f, 0.8f, 0.8f ),
             AmbientColor = new Vector3D<float>( 0.2f, 0.2f, 0.2f ),
@@ -134,7 +184,10 @@ public class ModelImporterSystem(
             Shininess = 32f,
             Alpha = 1f
         };
+    }
 
+    private void ExtractMaterialColors( Assimp.Material assimpMaterial, ref Components.Material material )
+    {
         if ( assimpMaterial.HasColorDiffuse )
         {
             material.DiffuseColor = new Vector3D<float>(
@@ -161,7 +214,10 @@ public class ModelImporterSystem(
                 assimpMaterial.ColorSpecular.B
             );
         }
+    }
 
+    private void ExtractMaterialProperties( Assimp.Material assimpMaterial, ref Components.Material material )
+    {
         if ( assimpMaterial.HasShininess )
         {
             material.Shininess = assimpMaterial.Shininess;
@@ -181,83 +237,93 @@ public class ModelImporterSystem(
         {
             material.Roughness = assimpMaterial.GetProperty( "$mat.roughnessFactor" ).GetFloatValue();
         }
+    }
 
+    private void LoadMaterialTextures( Assimp.Material assimpMaterial, Scene scene, string directory,
+        ref Components.Material material )
+    {
         LoadTexture( assimpMaterial, scene, directory, TextureType.BaseColor, ref material.Texture );
         LoadTexture( assimpMaterial, scene, directory, TextureType.Diffuse, ref material.Texture );
         LoadTexture( assimpMaterial, scene, directory, TextureType.Normals, ref material.NormalMap );
         LoadTexture( assimpMaterial, scene, directory, TextureType.Metalness, ref material.MetallicMap );
         LoadTexture( assimpMaterial, scene, directory, TextureType.Roughness, ref material.RoughnessMap );
-        LoadTexture( assimpMaterial, scene, directory, TextureType.Roughness, ref material.RoughnessMap );
         LoadTexture( assimpMaterial, scene, directory, TextureType.AmbientOcclusion, ref material.AmbientOcclusionMap );
         LoadTexture( assimpMaterial, scene, directory, TextureType.Emissive, ref material.EmissiveMap );
-
-        return material;
     }
 
     private void LoadTexture( Assimp.Material assimpMaterial, Scene scene, string directory,
         TextureType textureType, ref Texture2D? targetTexture )
     {
         if ( targetTexture != null )
-        {
             return;
-        }
 
         int textureCount = assimpMaterial.GetMaterialTextureCount( textureType );
+        if ( textureCount == 0 )
+            return;
 
-        if ( textureCount > 0 )
+        assimpMaterial.GetMaterialTexture( textureType, 0, out TextureSlot textureSlot );
+        string texturePath = textureSlot.FilePath;
+
+        if ( texturePath.StartsWith( "*" ) )
         {
-            assimpMaterial.GetMaterialTexture( textureType, 0, out TextureSlot textureSlot );
-            string texturePath = textureSlot.FilePath;
-
-            if ( texturePath.StartsWith( "*" ) )
-            {
-                if ( int.TryParse( texturePath.AsSpan( 1 ), out int textureIndex ) )
-                {
-                    if ( textureIndex < scene.TextureCount )
-                    {
-                        EmbeddedTexture embeddedTexture = scene.Textures[ textureIndex ];
-
-                        try
-                        {
-                            targetTexture = LoadEmbeddedTexture( embeddedTexture );
-                        }
-                        catch ( Exception )
-                        {
-                        }
-                    }
-                }
-            }
-            else if ( !string.IsNullOrEmpty( texturePath ) )
-            {
-                string[] possiblePaths =
-                [
-                    Path.Combine( directory, texturePath ),
-                    Path.Combine( directory, Path.GetFileName( texturePath ) ),
-                    texturePath
-                ];
-
-                string? foundPath = null;
-                foreach ( string path in possiblePaths )
-                {
-                    if ( File.Exists( path ) )
-                    {
-                        foundPath = path;
-                        break;
-                    }
-                }
-
-                if ( foundPath != null )
-                {
-                    try
-                    {
-                        targetTexture = textureSystem.CreateTextureFromFile( foundPath );
-                    }
-                    catch ( Exception )
-                    {
-                    }
-                }
-            }
+            targetTexture = LoadEmbeddedTextureByIndex( scene, texturePath );
         }
+        else if ( !string.IsNullOrEmpty( texturePath ) )
+        {
+            targetTexture = LoadExternalTexture( directory, texturePath );
+        }
+    }
+
+    private Texture2D? LoadEmbeddedTextureByIndex( Scene scene, string texturePath )
+    {
+        if ( !int.TryParse( texturePath.AsSpan( 1 ), out int textureIndex ) )
+            return null;
+
+        if ( textureIndex >= scene.TextureCount )
+            return null;
+
+        try
+        {
+            return LoadEmbeddedTexture( scene.Textures[ textureIndex ] );
+        }
+        catch ( Exception )
+        {
+            return null;
+        }
+    }
+
+    private Texture2D? LoadExternalTexture( string directory, string texturePath )
+    {
+        string? foundPath = FindTexturePath( directory, texturePath );
+        if ( foundPath == null )
+            return null;
+
+        try
+        {
+            return textureSystem.CreateTextureFromFile( foundPath );
+        }
+        catch ( Exception )
+        {
+            return null;
+        }
+    }
+
+    private string? FindTexturePath( string directory, string texturePath )
+    {
+        string[] possiblePaths =
+        [
+            Path.Combine( directory, texturePath ),
+            Path.Combine( directory, Path.GetFileName( texturePath ) ),
+            texturePath
+        ];
+
+        foreach ( string path in possiblePaths )
+        {
+            if ( File.Exists( path ) )
+                return path;
+        }
+
+        return null;
     }
 
     private Texture2D LoadEmbeddedTexture( EmbeddedTexture embeddedTexture )

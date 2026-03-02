@@ -61,7 +61,7 @@ public class Application() : ApplicationBase(
 
         World.AddSystem( new CameraMovementSystem() );
         World.AddSystem( new CircleSystem() );
-        World.AddSystem( new StarSystem() );
+        World.AddSystem( new FlagSystem() );
         World.AddSystem( new GeometryCircleSystem() );
 
         World.AddSystem( meshSystem );

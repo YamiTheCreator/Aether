@@ -30,7 +30,7 @@ public class MazePlayerController : SystemBase
             input.Mouse.Cursor.CursorMode = CursorMode.Disabled;
         }
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         if ( !World.HasGlobal<Input>() || _inputSystem == null )
@@ -52,7 +52,7 @@ public class MazePlayerController : SystemBase
             }
         }
     }
-
+    
     private void HandleCursorToggle( Input input )
     {
         bool shiftPressed = _inputSystem!.IsKeyDown( input, Key.ShiftLeft ) ||
@@ -65,7 +65,7 @@ public class MazePlayerController : SystemBase
             _firstMouse = true;
         }
     }
-
+    
     private void HandleMovement( ref Transform transform, Input input, MazeSystem? mazeSystem, float deltaTime )
     {
         Vector3D<float> originalPos = transform.Position;
@@ -76,7 +76,7 @@ public class MazePlayerController : SystemBase
             ? ResolveCollision( originalPos, desiredPos, mazeSystem )
             : desiredPos;
     }
-
+    
     private Vector3D<float> CalculateMoveDirection( Input input )
     {
         Vector3D<float> moveDir = Vector3D<float>.Zero;
@@ -92,7 +92,7 @@ public class MazePlayerController : SystemBase
 
         return moveDir;
     }
-
+    
     private Vector3D<float> CalculateDesiredPosition( Vector3D<float> originalPos, Vector3D<float> moveDir, float deltaTime )
     {
         Vector3D<float> desiredPos = originalPos;
@@ -106,14 +106,14 @@ public class MazePlayerController : SystemBase
 
         return new Vector3D<float>( desiredPos.X, _playerHeight, desiredPos.Z );
     }
-
+    
     private void HandleMouseLook( ref Transform transform, Input input )
     {
         Vector2D<float> mouseDelta = GetMouseDelta( input );
         UpdateCameraRotation( mouseDelta );
         CameraSystem.SetLookDirection( ref transform, _yaw, _pitch );
     }
-
+    
     private Vector2D<float> GetMouseDelta( Input input )
     {
         System.Numerics.Vector2 mousePos = _inputSystem!.GetMousePosition( input );
@@ -134,7 +134,7 @@ public class MazePlayerController : SystemBase
         _lastMousePos = mousePosVec;
         return delta;
     }
-
+    
     private void UpdateCameraRotation( Vector2D<float> mouseDelta )
     {
         _yaw += mouseDelta.X * _mouseSensitivity;
@@ -149,7 +149,7 @@ public class MazePlayerController : SystemBase
     protected override void OnDestroy()
     {
     }
-
+    
     private Vector3D<float> ResolveCollision( Vector3D<float> from, Vector3D<float> to, MazeSystem mazeSystem )
     {
         if ( !mazeSystem.CheckCollision( to.X, to.Z, _playerRadius ) )

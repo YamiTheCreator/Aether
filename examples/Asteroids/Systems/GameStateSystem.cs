@@ -214,7 +214,7 @@ public class GameStateSystem : SystemBase
             Rotation = Quaternion<float>.Identity
         };
 
-        Vector2D<float>[] spaceshipVertices = CollisionSystem.GetTransformedPolygon(
+        Vector2D<float>[] spaceshipVertices = TransformSystem.GetTransformedPolygon(
             VerticesBuilder.CreateSpaceshipVertices(),
             spaceshipTransform
         );
@@ -233,12 +233,12 @@ public class GameStateSystem : SystemBase
             if ( distance > safeRadius )
                 continue;
 
-            Vector2D<float>[] asteroidVertices = CollisionSystem.GetTransformedPolygon(
+            Vector2D<float>[] asteroidVertices = TransformSystem.GetTransformedPolygon(
                 collider.LocalVertices,
                 asteroidTransform
             );
 
-            if ( CollisionSystem.GJK( spaceshipVertices, asteroidVertices ) )
+            if ( CollisionSystem.Gjk( spaceshipVertices, asteroidVertices ) )
             {
                 return false;
             }

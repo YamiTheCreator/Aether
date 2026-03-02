@@ -12,7 +12,9 @@ public static class VerticesBuilder
 
         for ( int i = 0; i < sides; i++ )
         {
+            // Переходим в полярную систему координат -> 0/8, 1/8, 2/8 итд
             float angle = ( float )i / sides * MathF.PI * 2;
+            // Радиус ограничен 0.4f до 0.6f
             float radius = 0.4f + ( float )random.NextDouble() * 0.2f;
 
             vertices[ i ] = new Vector2D<float>(

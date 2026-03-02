@@ -58,52 +58,66 @@ public class TextureSystem( GL gl ) : SystemBase
     }
 
     public Texture2DComponent CreateTextureFromPixels( byte[] pixels, int width, int height,
-        TextureWrapMode wrapS = TextureWrapMode.Repeat,
-        TextureWrapMode wrapT = TextureWrapMode.Repeat,
-        TextureMinFilter minFilter = TextureMinFilter.LinearMipmapLinear,
-        TextureMagFilter magFilter = TextureMagFilter.Linear,
-        bool generateMipmaps = true )
-    {
-        uint handle = gl.GenTexture();
-        gl.BindTexture( TextureTarget.Texture2D, handle );
-
-        unsafe
+            TextureWrapMode wrapS = TextureWrapMode.Repeat,
+            TextureWrapMode wrapT = TextureWrapMode.Repeat,
+            TextureMinFilter minFilter = TextureMinFilter.LinearMipmapLinear,
+            TextureMagFilter magFilter = TextureMagFilter.Linear,
+            bool generateMipmaps = true )
         {
-            fixed ( byte* ptr = pixels )
+            uint handle = CreateTextureHandle();
+            UploadPixelData( handle, pixels, width, height );
+            SetTextureParameters( handle, wrapS, wrapT, minFilter, magFilter, generateMipmaps );
+            gl.BindTexture( TextureTarget.Texture2D, 0 );
+
+            TextureObject textureObj = TextureObject.FromHandle( gl, handle, width, height );
+
+            return new Texture2DComponent
             {
-                gl.TexImage2D(
-                    TextureTarget.Texture2D,
-                    0,
-                    InternalFormat.Rgba8,
-                    ( uint )width,
-                    ( uint )height,
-                    0,
-                    PixelFormat.Rgba,
-                    PixelType.UnsignedByte,
-                    ptr
-                );
+                Texture = textureObj
+            };
+        }
+
+        private uint CreateTextureHandle()
+        {
+            uint handle = gl.GenTexture();
+            gl.BindTexture( TextureTarget.Texture2D, handle );
+            return handle;
+        }
+
+        private void UploadPixelData( uint handle, byte[] pixels, int width, int height )
+        {
+            unsafe
+            {
+                fixed ( byte* ptr = pixels )
+                {
+                    gl.TexImage2D(
+                        TextureTarget.Texture2D,
+                        0,
+                        InternalFormat.Rgba8,
+                        ( uint )width,
+                        ( uint )height,
+                        0,
+                        PixelFormat.Rgba,
+                        PixelType.UnsignedByte,
+                        ptr
+                    );
+                }
             }
         }
 
-        gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, ( int )wrapS );
-        gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ( int )wrapT );
-        gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, ( int )minFilter );
-        gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, ( int )magFilter );
-
-        if ( generateMipmaps )
+        private void SetTextureParameters( uint handle, TextureWrapMode wrapS, TextureWrapMode wrapT, 
+            TextureMinFilter minFilter, TextureMagFilter magFilter, bool generateMipmaps )
         {
-            gl.GenerateMipmap( TextureTarget.Texture2D );
+            gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, ( int )wrapS );
+            gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ( int )wrapT );
+            gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, ( int )minFilter );
+            gl.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, ( int )magFilter );
+
+            if ( generateMipmaps )
+            {
+                gl.GenerateMipmap( TextureTarget.Texture2D );
+            }
         }
-
-        gl.BindTexture( TextureTarget.Texture2D, 0 );
-
-        TextureObject textureObj = TextureObject.FromHandle( gl, handle, width, height );
-
-        return new Texture2DComponent
-        {
-            Texture = textureObj
-        };
-    }
 
     public Texture2DComponent CreateTextureFromMemory( byte[] data,
         TextureWrapMode wrapS = TextureWrapMode.Repeat,

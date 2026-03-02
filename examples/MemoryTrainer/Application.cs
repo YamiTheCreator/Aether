@@ -45,10 +45,7 @@ public class Application() : ApplicationBase(
         World.SetGlobal( new GameState
         {
             GridRows = 4,
-            GridCols = 4,
-            TotalPairs = 8,
-            MatchedPairs = 0,
-            Moves = 0
+            GridCols = 4
         } );
 
         World.AddSystem( shaderSystem );
@@ -175,7 +172,7 @@ public class Application() : ApplicationBase(
                     startZ + row * spacing
                 );
 
-                CardFactory.CreateCard( World, cardIndex, pairId, textureIndex,
+                CardFactory.CreateCard( World, pairId, textureIndex,
                     position, cardSize, cardSize, cardDepth, meshSystem, textureSystem );
 
                 cardIndex++;

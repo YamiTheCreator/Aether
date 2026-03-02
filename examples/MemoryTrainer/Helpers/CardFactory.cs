@@ -9,7 +9,7 @@ namespace MemoryTrainer.Helpers;
 
 public static class CardFactory
 {
-    public static void CreateCard( World world, int cardId, int pairId, int textureIndex,
+    public static void CreateCard( World world, int pairId, int textureIndex,
         Vector3D<float> position, float width, float height, float depth,
         MeshSystem meshSystem, TextureSystem textureSystem )
     {
@@ -17,7 +17,6 @@ public static class CardFactory
 
         world.Add( entity, new Card
         {
-            CardId = cardId,
             PairId = pairId,
             TextureIndex = textureIndex,
             IsRevealed = false,

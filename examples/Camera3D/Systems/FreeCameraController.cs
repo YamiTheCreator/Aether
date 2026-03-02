@@ -4,7 +4,7 @@ using Graphics.Systems;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
-namespace Chess3D.Systems;
+namespace Camera3D.Systems;
 
 public class FreeCameraController : SystemBase
 {
@@ -27,7 +27,7 @@ public class FreeCameraController : SystemBase
             _input.Mouse.Cursor.CursorMode = CursorMode.Disabled;
         }
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         if ( _inputSystem is null || _input is null )
@@ -41,7 +41,7 @@ public class FreeCameraController : SystemBase
             HandleMouseLook( ref transform );
         }
     }
-
+    
     private void HandleMovement( ref Transform transform, float deltaTime )
     {
         Vector3D<float> moveDir = CalculateMoveDirection( transform );
@@ -52,34 +52,34 @@ public class FreeCameraController : SystemBase
             transform.Position += moveDir * _movementSpeed * deltaTime;
         }
     }
-
+    
     private Vector3D<float> CalculateMoveDirection( Transform transform )
     {
         Vector3D<float> moveDir = Vector3D<float>.Zero;
 
         if ( _inputSystem!.IsKeyDown( _input!, Key.W ) )
             moveDir += transform.Forward;
-        if ( _inputSystem.IsKeyDown( _input, Key.S ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.S ) )
             moveDir -= transform.Forward;
-        if ( _inputSystem.IsKeyDown( _input, Key.A ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.A ) )
             moveDir -= transform.Right;
-        if ( _inputSystem.IsKeyDown( _input, Key.D ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.D ) )
             moveDir += transform.Right;
-        if ( _inputSystem.IsKeyDown( _input, Key.Space ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.Space ) )
             moveDir += Vector3D<float>.UnitY;
-        if ( _inputSystem.IsKeyDown( _input, Key.ShiftLeft ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.ShiftLeft ) )
             moveDir -= Vector3D<float>.UnitY;
 
         return moveDir;
     }
-
+    
     private void HandleMouseLook( ref Transform transform )
     {
         Vector2D<float> mouseDelta = GetMouseDelta();
         UpdateCameraRotation( mouseDelta );
         CameraSystem.SetLookDirection( ref transform, _yaw, _pitch );
     }
-
+    
     private Vector2D<float> GetMouseDelta()
     {
         System.Numerics.Vector2 mousePos = _inputSystem!.GetMousePosition( _input! );
@@ -100,7 +100,8 @@ public class FreeCameraController : SystemBase
         _lastMousePos = mousePosVec;
         return delta;
     }
-
+    
+    // Pitch ограничен диапазоном [-89°, 89°] чтобы избежать переворота камеры
     private void UpdateCameraRotation( Vector2D<float> mouseDelta )
     {
         _yaw += mouseDelta.X * _mouseSensitivity;

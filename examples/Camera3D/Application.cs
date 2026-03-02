@@ -7,7 +7,6 @@ using Graphics.Systems;
 using Graphics.Structures;
 using Camera3D.Systems;
 using Camera3D.Components;
-using Chess3D.Systems;
 
 namespace Camera3D;
 

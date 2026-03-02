@@ -10,12 +10,12 @@ public class CardSystem : SystemBase
 {
     private Texture2D[]? _frontTextures;
     private Texture2D? _backTexture;
-
+    
     protected override void OnCreate()
     {
         LoadTextures();
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         GameState gameState = World.GetGlobal<GameState>();
@@ -42,7 +42,7 @@ public class CardSystem : SystemBase
     protected override void OnDestroy()
     {
     }
-
+    
     private void LoadTextures()
     {
         TextureSystem textureSystem = World.GetGlobal<TextureSystem>();
@@ -59,6 +59,7 @@ public class CardSystem : SystemBase
         _backTexture = textureSystem.CreateTextureFromColor( 1, 1, 50, 100, 200 );
     }
 
+    // Обновляем анимацию переворота карты через вращение по оси X
     private void UpdateCardFlip( ref Card card, ref Transform transform, float deltaTime )
     {
         if ( !card.IsFlipping )
@@ -87,7 +88,7 @@ public class CardSystem : SystemBase
 
         transform.Rotation = flipRotation * baseRotation;
     }
-
+    
     private void UpdateCardTexture( Entity entity, Card card )
     {
         if ( _frontTextures is null || _backTexture is null )
@@ -103,7 +104,7 @@ public class CardSystem : SystemBase
 
         material.Texture = showFront ? _frontTextures[ card.TextureIndex ] : _backTexture.Value;
     }
-
+    
     private void HandleFlipBackDelay( float deltaTime, ref GameState gameState )
     {
         if ( !gameState.IsWaitingForFlipBack )
@@ -117,7 +118,7 @@ public class CardSystem : SystemBase
             ResetRevealedCards( ref gameState );
         }
     }
-
+    
     private void FlipCardsBack( GameState gameState )
     {
         FlipCardBack( gameState.FirstRevealedCard );
@@ -147,6 +148,7 @@ public class CardSystem : SystemBase
         gameState.DelayTimer = 0f;
     }
 
+    // Обрабатываем клик по карте: открываем её и проверяем совпадение
     private void HandleCardClick( ref GameState gameState )
     {
         if ( !gameState.ClickedCard.HasValue )
@@ -170,13 +172,12 @@ public class CardSystem : SystemBase
         else if ( !gameState.SecondRevealedCard.HasValue )
         {
             gameState.SecondRevealedCard = entity;
-            gameState.Moves++;
             CheckForMatch( ref gameState );
         }
 
         gameState.ClickedCard = null;
     }
-
+    
     private bool CanRevealCard( Card card, GameState gameState )
     {
         if ( card.IsMatched || card.IsRevealed )
@@ -191,7 +192,7 @@ public class CardSystem : SystemBase
         card.FlipToFront = true;
         card.FlipProgress = 0f;
     }
-
+    
     private void CheckForMatch( ref GameState gameState )
     {
         ref Card firstCard = ref World.Get<Card>( gameState.FirstRevealedCard!.Value );
@@ -200,7 +201,6 @@ public class CardSystem : SystemBase
         if ( firstCard.PairId == secondCard.PairId )
         {
             MarkCardsAsMatched( ref firstCard, ref secondCard );
-            UpdateMatchedPairs( ref gameState );
             ResetRevealedCards( ref gameState );
         }
         else
@@ -213,11 +213,6 @@ public class CardSystem : SystemBase
     {
         card1.IsMatched = true;
         card2.IsMatched = true;
-    }
-
-    private void UpdateMatchedPairs( ref GameState gameState )
-    {
-        gameState.MatchedPairs++;
     }
 
     private void StartFlipBackDelay( ref GameState gameState )

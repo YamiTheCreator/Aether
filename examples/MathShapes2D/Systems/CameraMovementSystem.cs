@@ -33,7 +33,7 @@ public class CameraMovementSystem : SystemBase
     private void HandlePlaneSwitch()
     {
         bool isAPressed = _inputSystem!.IsKeyDown( _input!, Key.A );
-        bool isDPressed = _inputSystem.IsKeyDown( _input, Key.D );
+        bool isDPressed = _inputSystem.IsKeyDown( _input!, Key.D );
 
         if ( isAPressed && !_wasAPressed && _currentPlane > 0 )
         {

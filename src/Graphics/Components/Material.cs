@@ -4,7 +4,7 @@ using Graphics.Structures;
 
 namespace Graphics.Components;
 
-public struct Material() : Component
+public record struct Material() : Component
 {
     // Цвет фонового отражения
     public Vector3D<float> AmbientColor = new( 0.2f, 0.2f, 0.2f );

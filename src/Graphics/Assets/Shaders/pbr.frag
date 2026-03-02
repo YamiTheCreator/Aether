@@ -14,14 +14,13 @@ uniform sampler2D uMetallicMap;
 uniform sampler2D uRoughnessMap;
 uniform sampler2D uAOMap;
 
-// Флаги: какие текстуры включены (1 = да, 0 = нет)
 uniform int uHasTexture;
 uniform int uHasNormalMap;
 uniform int uHasMetallicMap;
 uniform int uHasRoughnessMap;
 uniform int uHasAOMap;
 
-// Свойства материала (если нет текстур)
+// Свойства материала
 uniform float uMetallic;
 uniform float uRoughness;
 uniform vec3 uMaterialDiffuse;
@@ -31,7 +30,7 @@ uniform float uAlpha;
 uniform vec3 uEmissionColor;
 uniform float uEmissionIntensity;
 
-// Источники света (до 4 точечных)
+// Источники света
 uniform vec4 uPointLightPositions[4];
 uniform vec4 uPointLightColors[4];
 uniform int uNumLights;
@@ -109,7 +108,7 @@ void main()
         ao = texture(uAOMap, TexCoords).r;
     }
 
-    // Норма́ль поверхности
+    // Нормаль поверхности
     vec3 N = normalize(Normal);
 
     // Применяем normal map если есть
@@ -185,9 +184,9 @@ void main()
         color += emission;
     }
 
-    // Tonemapping: сжимаем HDR в диапазон [0, 1]
+    // Тон маппинг - сжимаем HDR в диапазон от 0 до 1
     color = color / (color + vec3(1.0));
-    // Gamma correction: корректируем под монитор
+    // Гамма коррекция - корректируем под монитор
     color = pow(color, vec3(1.0/2.2));
 
     FragColor = vec4(color, uAlpha);

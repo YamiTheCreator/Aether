@@ -13,7 +13,7 @@ public class AsteroidSystem : SystemBase
 {
     private readonly Random _random = new();
     private GL? _gl;
-
+    
     protected override void OnCreate()
     {
         _gl = World.GetGlobal<GL>();
@@ -29,7 +29,7 @@ public class AsteroidSystem : SystemBase
         GameStateSystem? gameStateSystem = World.GetSystem<GameStateSystem>();
         if ( gameStateSystem != null && gameStateSystem.IsGameOver() )
         {
-            return; // Не обновляем астероиды если игра окончена
+            return;
         }
 
         int asteroidCount = 0;
@@ -56,7 +56,7 @@ public class AsteroidSystem : SystemBase
             gameStateSystem.NextWave();
         }
     }
-
+    
     protected override void OnRender()
     {
         if ( _gl == null ) return;
@@ -73,10 +73,10 @@ public class AsteroidSystem : SystemBase
     }
 
     protected override void OnDestroy() { }
-
+    
     public void SpawnAsteroid( int size, Vector3D<float>? position = null )
     {
-        Vector3D<float> spawnPos = position ?? GetRandomPosition();
+        Vector3D<float> spawnPos = position ?? GetRandomPositionOnEdge();
         float scale = size switch
         {
             3 => 1.5f,
@@ -113,7 +113,7 @@ public class AsteroidSystem : SystemBase
         World.Add( entity, transform );
         World.Add( entity, collider );
     }
-
+    
     public void SplitAsteroid( Entity asteroidEntity )
     {
         if ( !World.Has<Asteroid>( asteroidEntity ) ) return;
@@ -149,8 +149,8 @@ public class AsteroidSystem : SystemBase
             }
         }
     }
-
-    private Vector3D<float> GetRandomPosition()
+    
+    private Vector3D<float> GetRandomPositionOnEdge()
     {
         WorldBounds bounds = GetWorldBounds();
         int edge = _random.Next( 4 );
@@ -166,7 +166,7 @@ public class AsteroidSystem : SystemBase
                 ( float )_random.NextDouble() * bounds.Height - bounds.Height / 2, 0 )
         };
     }
-
+    
     private WorldBounds GetWorldBounds()
     {
         foreach ( Entity entity in World.Filter<WorldBounds>() )
@@ -177,6 +177,7 @@ public class AsteroidSystem : SystemBase
         return WorldBounds.Default;
     }
 
+    // Оборачиваем позицию объекта при выходе за границы экрана
     private void WrapPosition( ref Vector3D<float> position )
     {
         WorldBounds bounds = GetWorldBounds();
@@ -185,7 +186,7 @@ public class AsteroidSystem : SystemBase
         if ( position.Y > bounds.Height / 2 ) position.Y = -bounds.Height / 2;
         if ( position.Y < -bounds.Height / 2 ) position.Y = bounds.Height / 2;
     }
-
+    
     private static Mesh CreateAsteroidMesh( GL gl, Vector2D<float>[] localVertices )
     {
         Vertex[] vertices = ConvertToVertices( localVertices );
@@ -197,7 +198,7 @@ public class AsteroidSystem : SystemBase
 
         return mesh;
     }
-
+    
     private static Vertex[] ConvertToVertices( Vector2D<float>[] localVertices )
     {
         Vertex[] vertices = new Vertex[ localVertices.Length ];
@@ -215,7 +216,7 @@ public class AsteroidSystem : SystemBase
 
         return vertices;
     }
-
+    
     private static uint[] CreateLineStripIndices( int vertexCount )
     {
         uint[] indices = new uint[ vertexCount + 1 ];

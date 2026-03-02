@@ -22,7 +22,7 @@ public class BulletSystem : SystemBase
         GameStateSystem? gameStateSystem = World.GetSystem<GameStateSystem>();
         if ( gameStateSystem != null && gameStateSystem.IsGameOver() )
         {
-            return; // Не обновляем пули если игра окончена
+            return;
         }
 
         List<Entity> toRemove = [ ];
@@ -84,10 +84,10 @@ public class BulletSystem : SystemBase
 
         Vector2D<float>[] bulletVertices =
         [
-            new Vector2D<float>( -0.15f, -0.15f ),
-            new Vector2D<float>( 0.15f, -0.15f ),
-            new Vector2D<float>( 0.15f, 0.15f ),
-            new Vector2D<float>( -0.15f, 0.15f )
+            new( -0.15f, -0.15f ),
+            new( 0.15f, -0.15f ),
+            new( 0.15f, 0.15f ),
+            new( -0.15f, 0.15f )
         ];
 
         Collider collider = new()

@@ -7,7 +7,7 @@ using MathShapes2D.Components;
 
 namespace MathShapes2D.Systems;
 
-public class StarSystem : SystemBase
+public class FlagSystem : SystemBase
 {
     private MeshSystem? _meshSystem;
 
@@ -32,14 +32,14 @@ public class StarSystem : SystemBase
             if ( star.IsGenerated )
                 continue;
 
-            GenerateStar( entity, ref star, _meshSystem );
+            AddQuad( entity, _meshSystem );
             star.IsGenerated = true;
         }
     }
 
     protected override void OnDestroy() { }
 
-    private void GenerateStar( Entity entity, ref Star star, MeshSystem meshSystem )
+    private void AddQuad( Entity entity, MeshSystem meshSystem )
     {
         List<Vertex> vertices = [ ];
         List<uint> indices = [ ];
@@ -58,10 +58,6 @@ public class StarSystem : SystemBase
         indices.AddRange( [ 0, 1, 2, 0, 2, 3 ] );
 
         Material material = World.Get<Material>( entity );
-
-        Console.WriteLine( $"Star: Creating mesh with {vertices.Count} vertices, {indices.Count} indices" );
-        Console.WriteLine( $"Material has shader: {material.Shader.HasValue}" );
-        Console.WriteLine( $"Star outer radius: {star.OuterRadius}, inner radius: {star.InnerRadius}" );
 
         Mesh mesh = meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), material );
         World.Add( entity, mesh );

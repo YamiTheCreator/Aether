@@ -10,7 +10,6 @@ uniform mat4 uModel;
 
 void main()
 {
-    // Передаем позицию в world space (после трансформации модели)
     gl_Position = uModel * vec4(aPosition, 1.0);
     vColor = aColor;
 }

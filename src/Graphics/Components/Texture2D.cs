@@ -2,7 +2,7 @@ using Graphics.Structures;
 
 namespace Graphics.Components;
 
-public struct Texture2D
+public record struct Texture2D
 {
     public TextureObject Texture { get; set; }
 

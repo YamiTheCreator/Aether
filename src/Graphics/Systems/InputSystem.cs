@@ -45,26 +45,42 @@ public class InputSystem : SystemBase
 
     public void Update( InputComponent input )
     {
+        UpdatePreviousKeys( input );
+        UpdateCurrentKeys( input );
+    }
+
+    private void UpdatePreviousKeys( InputComponent input )
+    {
         input.PreviousKeys.Clear();
         foreach ( Key key in input.CurrentKeys )
         {
             input.PreviousKeys.Add( key );
         }
+    }
 
+    private void UpdateCurrentKeys( InputComponent input )
+    {
         input.CurrentKeys.Clear();
         foreach ( Key key in _allKeys )
         {
             if ( key == Key.Unknown ) continue;
-            try
+
+            if ( IsKeyCurrentlyPressed( input.Keyboard, key ) )
             {
-                if ( input.Keyboard.IsKeyPressed( key ) )
-                {
-                    input.CurrentKeys.Add( key );
-                }
+                input.CurrentKeys.Add( key );
             }
-            catch
-            {
-            }
+        }
+    }
+
+    private bool IsKeyCurrentlyPressed( IKeyboard keyboard, Key key )
+    {
+        try
+        {
+            return keyboard.IsKeyPressed( key );
+        }
+        catch
+        {
+            return false;
         }
     }
 

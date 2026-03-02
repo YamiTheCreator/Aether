@@ -56,29 +56,47 @@ public class SpriteSystem : SystemBase
         if ( !_shadersInitialized || !_basicShader.HasValue )
             return;
 
+        SetupBlending();
+
+        Camera? camera = GetCamera();
+        if ( !camera.HasValue )
+            return;
+
+        PrepareShader( camera.Value );
+
+        MaterialSystem? materialSystem = World.GetSystem<MaterialSystem>();
+
+        RenderSprites( materialSystem );
+    }
+
+    private void SetupBlending()
+    {
         _gl.Enable( EnableCap.Blend );
         _gl.BlendFunc( BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha );
         _gl.Disable( EnableCap.DepthTest );
+    }
 
-        Camera camera = default;
-        bool cameraFound = false;
-
+    private Camera? GetCamera()
+    {
         foreach ( Entity e in World.Filter<Camera>() )
         {
-            camera = World.Get<Camera>( e );
-            cameraFound = true;
-            break;
+            return World.Get<Camera>( e );
         }
 
-        if ( !cameraFound )
-            return;
+        return null;
+    }
 
-        ShaderProgram shader = _basicShader.Value.Program;
+    private void PrepareShader( Camera camera )
+    {
+        ShaderProgram shader = _basicShader!.Value.Program;
         shader.Use();
         shader.SetUniform( "uModel", Matrix4X4<float>.Identity );
         shader.SetUniform( "uViewProjection", camera.ViewProjectionMatrix );
+    }
 
-        MaterialSystem? materialSystem = World.GetSystem<MaterialSystem>();
+    private void RenderSprites( MaterialSystem? materialSystem )
+    {
+        ShaderProgram shader = _basicShader!.Value.Program;
 
         foreach ( Entity entity in World.Filter<Sprite, Transform>() )
         {
@@ -90,10 +108,7 @@ public class SpriteSystem : SystemBase
                 Flush();
             }
 
-            if ( materialSystem != null )
-            {
-                materialSystem.BindMaterial( ref sprite.Material, shader );
-            }
+            materialSystem?.BindMaterial( ref sprite.Material, shader );
 
             SubmitQuad( sprite, transform );
             Flush();
@@ -123,70 +138,92 @@ public class SpriteSystem : SystemBase
     }
 
     private void SubmitQuad( Sprite sprite, Transform transform )
-    {
-        if ( _vertices.Count + 4 > _maxVertices || _indices.Count + 6 > _maxIndices )
         {
-            Flush();
+            if ( _vertices.Count + 4 > _maxVertices || _indices.Count + 6 > _maxIndices )
+            {
+                Flush();
+            }
+
+            uint indexOffset = ( uint )_vertices.Count;
+
+            Vector2D<float>[] corners = CalculateQuadCorners( sprite );
+            Vector2D<float>[] uvs = CalculateQuadUVs( sprite );
+
+            AddQuadVertices( corners, uvs, sprite, transform );
+            AddQuadIndices( indexOffset );
         }
 
-        uint indexOffset = ( uint )_vertices.Count;
-
-        Vector2D<float> size = sprite.Size;
-        Vector2D<float> pivot = sprite.Pivot;
-        Vector4D<float> color = sprite.Color;
-
-        Vector3D<float> position = transform.Position;
-        float rotation = transform.Rotation.Z;
-        Vector3D<float> scale = transform.Scale;
-
-        float cos = MathF.Cos( rotation );
-        float sin = MathF.Sin( rotation );
-
-        float left = -pivot.X * size.X;
-        float right = ( 1 - pivot.X ) * size.X;
-        float top = -pivot.Y * size.Y;
-        float bottom = ( 1 - pivot.Y ) * size.Y;
-
-        Vector2D<float>[] corners =
-        [
-            new( left, top ),
-            new( right, top ),
-            new( right, bottom ),
-            new( left, bottom )
-        ];
-
-        Vector2D<float>[] uvs =
-        [
-            new( sprite.FlipX ? 1 : 0, sprite.FlipY ? 1 : 0 ),
-            new( sprite.FlipX ? 0 : 1, sprite.FlipY ? 1 : 0 ),
-            new( sprite.FlipX ? 0 : 1, sprite.FlipY ? 0 : 1 ),
-            new( sprite.FlipX ? 1 : 0, sprite.FlipY ? 0 : 1 )
-        ];
-
-        for ( int i = 0; i < 4; i++ )
+        private Vector2D<float>[] CalculateQuadCorners( Sprite sprite )
         {
-            float x = corners[ i ].X * scale.X;
-            float y = corners[ i ].Y * scale.Y;
+            Vector2D<float> size = sprite.Size;
+            Vector2D<float> pivot = sprite.Pivot;
+
+            float left = -pivot.X * size.X;
+            float right = ( 1 - pivot.X ) * size.X;
+            float top = -pivot.Y * size.Y;
+            float bottom = ( 1 - pivot.Y ) * size.Y;
+
+            return
+            [
+                new( left, top ),
+                new( right, top ),
+                new( right, bottom ),
+                new( left, bottom )
+            ];
+        }
+
+        private Vector2D<float>[] CalculateQuadUVs( Sprite sprite )
+        {
+            return
+            [
+                new( sprite.FlipX ? 1 : 0, sprite.FlipY ? 1 : 0 ),
+                new( sprite.FlipX ? 0 : 1, sprite.FlipY ? 1 : 0 ),
+                new( sprite.FlipX ? 0 : 1, sprite.FlipY ? 0 : 1 ),
+                new( sprite.FlipX ? 1 : 0, sprite.FlipY ? 0 : 1 )
+            ];
+        }
+
+        private void AddQuadVertices( Vector2D<float>[] corners, Vector2D<float>[] uvs, Sprite sprite, Transform transform )
+        {
+            Vector3D<float> position = transform.Position;
+            Vector3D<float> scale = transform.Scale;
+            float rotation = transform.Rotation.Z;
+            Vector4D<float> color = sprite.Color;
+
+            float cos = MathF.Cos( rotation );
+            float sin = MathF.Sin( rotation );
+
+            for ( int i = 0; i < 4; i++ )
+            {
+                Vector3D<float> vertexPos = TransformVertex( corners[ i ], position, scale, cos, sin );
+                _vertices.Add( new Vertex( vertexPos, uvs[ i ], color, 0, Vector3D<float>.UnitZ ) );
+            }
+        }
+
+        private Vector3D<float> TransformVertex( Vector2D<float> corner, Vector3D<float> position, Vector3D<float> scale, float cos, float sin )
+        {
+            float x = corner.X * scale.X;
+            float y = corner.Y * scale.Y;
 
             float rotatedX = x * cos - y * sin;
             float rotatedY = x * sin + y * cos;
 
-            Vector3D<float> vertexPos = new(
+            return new Vector3D<float>(
                 position.X + rotatedX,
                 position.Y + rotatedY,
                 position.Z
             );
-
-            _vertices.Add( new Vertex( vertexPos, uvs[ i ], color, 0, Vector3D<float>.UnitZ ) );
         }
 
-        _indices.Add( indexOffset );
-        _indices.Add( indexOffset + 1 );
-        _indices.Add( indexOffset + 2 );
-        _indices.Add( indexOffset );
-        _indices.Add( indexOffset + 2 );
-        _indices.Add( indexOffset + 3 );
-    }
+        private void AddQuadIndices( uint indexOffset )
+        {
+            _indices.Add( indexOffset );
+            _indices.Add( indexOffset + 1 );
+            _indices.Add( indexOffset + 2 );
+            _indices.Add( indexOffset );
+            _indices.Add( indexOffset + 2 );
+            _indices.Add( indexOffset + 3 );
+        }
 
     private void Flush()
     {

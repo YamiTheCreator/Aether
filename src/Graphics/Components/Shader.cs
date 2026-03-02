@@ -4,7 +4,7 @@ using Silk.NET.OpenGL;
 
 namespace Graphics.Components;
 
-public struct Shader : Component
+public record struct Shader : Component
 {
     public ShaderProgram Program { get; set; }
 

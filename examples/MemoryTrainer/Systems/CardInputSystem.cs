@@ -19,7 +19,7 @@ public class CardInputSystem : SystemBase
         _inputSystem = World.GetGlobal<InputSystem>();
         _input = World.GetGlobal<Input>();
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         if ( _inputSystem is null || _input is null )
@@ -51,12 +51,12 @@ public class CardInputSystem : SystemBase
     protected override void OnDestroy()
     {
     }
-
+    
     private bool HandleRestartInput()
     {
         return _inputSystem!.IsKeyPressed( _input!, Key.R );
     }
-
+    
     private void HandleMouseInput( ref GameState gameState )
     {
         bool isMousePressed = _inputSystem!.IsMouseButtonDown( _input!, MouseButton.Left );
@@ -69,6 +69,7 @@ public class CardInputSystem : SystemBase
         _wasMousePressed = isMousePressed;
     }
 
+    // Преобразуем координаты экрана в луч и проверяем пересечение с картами
     private void ProcessMouseClick( ref GameState gameState )
     {
         System.Numerics.Vector2 mousePos = _inputSystem!.GetMousePosition( _input! );
@@ -97,18 +98,22 @@ public class CardInputSystem : SystemBase
         return null;
     }
 
+    // Преобразуем координаты мыши в луч в мировом пространстве
+    // Используем обратную матрицу view-projection для unprojection
     private bool UnprojectMouseToRay( Vector2D<float> mousePos, Camera camera,
         out Vector3D<float> rayOrigin, out Vector3D<float> rayDirection )
     {
         float width = WindowBase.LogicalWidth;
         float height = WindowBase.LogicalHeight;
 
+        // Нормализовали координаты
         float x = 2f * mousePos.X / width - 1f;
         float y = 1f - 2f * mousePos.Y / height;
 
         Matrix4X4<float> viewMatrix = camera.ViewMatrix;
         Matrix4X4<float> projMatrix = camera.ProjectionMatrix;
 
+        // Инвертировали матрицу для NDC to World
         Matrix4X4<float> viewProjMatrix = viewMatrix * projMatrix;
         if ( !Matrix4X4.Invert( viewProjMatrix, out Matrix4X4<float> invMatrix ) )
         {
@@ -117,17 +122,20 @@ public class CardInputSystem : SystemBase
             return false;
         }
 
+        // Взяли плоскости отсечения камеры
         Vector4D<float> rayClipNear = new( x, y, -1f, 1f );
         Vector4D<float> rayClipFar = new( x, y, 1f, 1f );
 
         Vector4D<float> rayWorldNear = Vector4D.Transform( rayClipNear, invMatrix );
         Vector4D<float> rayWorldFar = Vector4D.Transform( rayClipFar, invMatrix );
 
+        // Отменяем перспективное искажение делением на w(трансляция)
         if ( MathF.Abs( rayWorldNear.W ) > 0.0001f )
             rayWorldNear /= rayWorldNear.W;
         if ( MathF.Abs( rayWorldFar.W ) > 0.0001f )
             rayWorldFar /= rayWorldFar.W;
 
+        // Формируем луч между плоскостями в мировых координатах
         rayOrigin = new Vector3D<float>( rayWorldNear.X, rayWorldNear.Y, rayWorldNear.Z );
         Vector3D<float> rayEnd = new( rayWorldFar.X, rayWorldFar.Y, rayWorldFar.Z );
         rayDirection = Vector3D.Normalize( rayEnd - rayOrigin );
@@ -135,6 +143,7 @@ public class CardInputSystem : SystemBase
         return true;
     }
 
+    // Проверяем пересечение луча с плоскостью карт и ищем карту в точке пересечения
     private void CheckCardClick( Vector3D<float> rayOrigin, Vector3D<float> rayDirection, ref GameState gameState )
     {
         Vector3D<float>? intersectionPoint = CalculatePlaneIntersection( rayOrigin, rayDirection );
@@ -148,6 +157,7 @@ public class CardInputSystem : SystemBase
         }
     }
 
+    // Вычисляем точку пересечения луча с горизонтальной плоскостью (Y = 0)
     private Vector3D<float>? CalculatePlaneIntersection( Vector3D<float> rayOrigin, Vector3D<float> rayDirection )
     {
         const float planeY = 0f;
@@ -162,6 +172,7 @@ public class CardInputSystem : SystemBase
         return rayOrigin + rayDirection * t;
     }
 
+    // Ищем карту в заданной позиции, игнорируя совпавшие и переворачивающиеся карты
     private Entity? FindCardAtPosition( Vector3D<float> position )
     {
         foreach ( Entity entity in World.Filter<Card>().With<Transform>() )
@@ -180,6 +191,7 @@ public class CardInputSystem : SystemBase
         return null;
     }
 
+    // Проверяем, находится ли точка внутри границ карты (AABB проверка в 2D)
     private bool IsPointInCard( Vector3D<float> point, Vector3D<float> cardPosition )
     {
         const float cardSize = 0.9f;

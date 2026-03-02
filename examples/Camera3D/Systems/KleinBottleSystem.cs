@@ -19,7 +19,7 @@ public class KleinBottleSystem : SystemBase
     }
 
     protected override void OnUpdate( float deltaTime ) { }
-
+    
     protected override void OnRender()
     {
         if ( _meshSystem == null || _materialSystem == null ) return;
@@ -42,6 +42,7 @@ public class KleinBottleSystem : SystemBase
 
     protected override void OnDestroy() { }
 
+    // Генерируем полный меш бутылки Клейна: вычисляем границы, создаём вершины и индексы
     private void GenerateBottleMesh( Entity entity, ref KleinBottle bottle, ref Transform transform,
         MeshSystem meshSystem, MaterialSystem materialSystem )
     {
@@ -53,6 +54,7 @@ public class KleinBottleSystem : SystemBase
         AddMeshToEntity( entity, vertices, indices, meshSystem, materialSystem );
     }
 
+    // Вычисляем минимальную и максимальную Y координату для градиента цвета
     private (float minY, float maxY) CalculateYBounds( KleinBottle bottle, float scale )
     {
         float minY = float.MaxValue;
@@ -72,6 +74,7 @@ public class KleinBottleSystem : SystemBase
         return (minY, maxY);
     }
 
+    // Генерируем все вершины бутылки Клейна с позициями, нормалями, цветами и UV координатами
     private List<Vertex> GenerateVertices( KleinBottle bottle, float scale, float minY, float maxY )
     {
         List<Vertex> vertices = [ ];
@@ -95,6 +98,7 @@ public class KleinBottleSystem : SystemBase
         return vertices;
     }
 
+    // Вычисляем позицию точки на поверхности бутылки Клейна по параметрическим координатам u и v
     private Vector3D<float> CalculateKleinBottlePosition( float u, float v, float scale )
     {
         float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
@@ -116,6 +120,7 @@ public class KleinBottleSystem : SystemBase
         return new Vector3D<float>( x * scale * 0.1f, -y * scale * 0.1f, z * scale * 0.1f );
     }
 
+    // Вычисляем нормаль к поверхности через векторное произведение касательных векторов
     private Vector3D<float> CalculateKleinBottleNormal( float u, float v, float scale )
     {
         const float dv = 0.01f;
@@ -125,11 +130,14 @@ public class KleinBottleSystem : SystemBase
         
         float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
         Vector3D<float> tangentU = CalculateTangentU( u, v, r, scale );
+        // производная по вертикали сложная, так как функция кусочная и много параметров
+        // легче использовать приближение
         Vector3D<float> tangentV = posV - pos;
 
         return Vector3D.Normalize( Vector3D.Cross( tangentU, tangentV ) );
     }
 
+    // Вычисляем касательный вектор по параметру u аналитически
     private Vector3D<float> CalculateTangentU( float u, float v, float r, float scale )
     {
         float x2, y2, z2;
@@ -150,8 +158,10 @@ public class KleinBottleSystem : SystemBase
         return new Vector3D<float>( x2 * scale * 0.1f, -y2 * scale * 0.1f, z2 * scale * 0.1f );
     }
 
+    // Вычисляем цвет вершины на основе её Y координаты для создания градиента
     private Vector4D<float> CalculateVertexColor( float y, float minY, float maxY )
     {
+        // Нормализация
         float t = ( y - minY ) / ( maxY - minY );
         return new Vector4D<float>(
             0.2f + t * 0.8f,
@@ -161,6 +171,7 @@ public class KleinBottleSystem : SystemBase
         );
     }
 
+    // Генерируем индексы для треугольников, соединяющих вершины в сетку
     private List<uint> GenerateIndices( KleinBottle bottle )
     {
         List<uint> indices = [ ];
@@ -187,6 +198,7 @@ public class KleinBottleSystem : SystemBase
         return indices;
     }
 
+    // Добавляем меш и материал к сущности
     private void AddMeshToEntity( Entity entity, List<Vertex> vertices, List<uint> indices, 
         MeshSystem meshSystem, MaterialSystem materialSystem )
     {

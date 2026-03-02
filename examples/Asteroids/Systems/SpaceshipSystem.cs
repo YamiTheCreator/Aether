@@ -142,6 +142,7 @@ public class SpaceshipSystem : SystemBase
         return 2f * MathF.Atan2( rotation.Z, rotation.W );
     }
 
+    // Оборачиваем позицию корабля при выходе за границы экрана
     private void WrapPosition( ref Vector3D<float> position, WorldBounds bounds )
     {
         float halfWidth = bounds.Width / 2;

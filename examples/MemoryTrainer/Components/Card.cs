@@ -4,7 +4,6 @@ namespace MemoryTrainer.Components;
 
 public struct Card : Component
 {
-    public int CardId;
     public int PairId;
     public int TextureIndex;
 

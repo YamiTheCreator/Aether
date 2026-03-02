@@ -16,7 +16,7 @@ public class GameManagerSystem : SystemBase
         _meshSystem = World.GetGlobal<MeshSystem>();
         _textureSystem = World.GetGlobal<TextureSystem>();
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         GameState gameState = World.GetGlobal<GameState>();
@@ -36,7 +36,7 @@ public class GameManagerSystem : SystemBase
     protected override void OnDestroy()
     {
     }
-
+    
     private void RestartGame()
     {
         if ( _meshSystem is null || _textureSystem is null )
@@ -66,8 +66,6 @@ public class GameManagerSystem : SystemBase
         GameState gameState = World.GetGlobal<GameState>();
         gameState.FirstRevealedCard = null;
         gameState.SecondRevealedCard = null;
-        gameState.MatchedPairs = 0;
-        gameState.Moves = 0;
         gameState.DelayTimer = 0f;
         gameState.IsWaitingForFlipBack = false;
         gameState.ClickedCard = null;
@@ -94,6 +92,7 @@ public class GameManagerSystem : SystemBase
         return pairIds;
     }
 
+    // Fisher-Yates
     private void ShufflePairs( List<int> pairIds )
     {
         Random random = new();
@@ -103,7 +102,7 @@ public class GameManagerSystem : SystemBase
             ( pairIds[ i ], pairIds[ j ] ) = ( pairIds[ j ], pairIds[ i ] );
         }
     }
-
+    
     private void PlaceCards( List<int> pairIds, int rows, int cols )
     {
         const float cardSize = 0.9f;
@@ -127,7 +126,7 @@ public class GameManagerSystem : SystemBase
                     startZ + row * spacing
                 );
 
-                CardFactory.CreateCard( World, cardIndex, pairId, textureIndex,
+                CardFactory.CreateCard( World, pairId, textureIndex,
                     position, cardSize, cardSize, cardDepth, _meshSystem!, _textureSystem! );
 
                 cardIndex++;

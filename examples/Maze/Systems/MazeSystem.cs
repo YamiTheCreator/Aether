@@ -70,18 +70,18 @@ public class MazeSystem : SystemBase
                     continue;
 
                 Material material = SelectWallMaterial( materials, x, z );
-                
+
                 if ( !wallsByMaterial.ContainsKey( material ) )
                 {
-                    wallsByMaterial[ material ] = ( new List<Vertex>(), new List<uint>() );
+                    wallsByMaterial[ material ] = ( [ ], [ ] );
                 }
 
-                var (vertices, indices) = wallsByMaterial[ material ];
+                (List<Vertex> vertices, List<uint> indices) = wallsByMaterial[ material ];
                 AddWallQuads( vertices, indices, x, z );
             }
         }
 
-        foreach ( var (material, (vertices, indices)) in wallsByMaterial )
+        foreach ( (Material material, (List<Vertex> vertices, List<uint> indices)) in wallsByMaterial )
         {
             if ( vertices.Count > 0 )
             {
@@ -97,6 +97,7 @@ public class MazeSystem : SystemBase
         }
     }
 
+    // Добавляем стены, не учитывая пересекающиеся грани
     private void AddWallQuads( List<Vertex> vertices, List<uint> indices, int x, int z )
     {
         Vector4D<float> white = new( 1, 1, 1, 1 );
@@ -107,7 +108,7 @@ public class MazeSystem : SystemBase
         float y0 = 0;
         float y1 = 1;
 
-        // Front (-Z)
+        // -Z
         if ( !IsWall( x, z - 1 ) )
         {
             AddQuad( vertices, indices,
@@ -116,7 +117,7 @@ public class MazeSystem : SystemBase
                 new Vector3D<float>( 0, 0, -1 ), white );
         }
 
-        // Back (+Z)
+        // +Z
         if ( !IsWall( x, z + 1 ) )
         {
             AddQuad( vertices, indices,
@@ -125,7 +126,7 @@ public class MazeSystem : SystemBase
                 new Vector3D<float>( 0, 0, 1 ), white );
         }
 
-        // Left (-X)
+        // -X
         if ( !IsWall( x - 1, z ) )
         {
             AddQuad( vertices, indices,
@@ -134,7 +135,7 @@ public class MazeSystem : SystemBase
                 new Vector3D<float>( -1, 0, 0 ), white );
         }
 
-        // Right (+X)
+        // +X
         if ( !IsWall( x + 1, z ) )
         {
             AddQuad( vertices, indices,
@@ -143,13 +144,13 @@ public class MazeSystem : SystemBase
                 new Vector3D<float>( 1, 0, 0 ), white );
         }
 
-        // Top (+Y)
+        // +Y
         AddQuad( vertices, indices,
             new Vector3D<float>( x0, y1, z0 ), new Vector3D<float>( x1, y1, z0 ),
             new Vector3D<float>( x1, y1, z1 ), new Vector3D<float>( x0, y1, z1 ),
             new Vector3D<float>( 0, 1, 0 ), white );
 
-        // Bottom (-Y)
+        // -Y
         AddQuad( vertices, indices,
             new Vector3D<float>( x0, y0, z1 ), new Vector3D<float>( x1, y0, z1 ),
             new Vector3D<float>( x1, y0, z0 ), new Vector3D<float>( x0, y0, z0 ),
@@ -160,28 +161,31 @@ public class MazeSystem : SystemBase
     {
         return ( x, z ) switch
         {
-            ( < 7, < 7 ) => materials.BrickMaterial,
-            ( >= 7, < 7 ) => materials.StoneMaterial,
-            ( < 7, >= 7 ) => materials.TileMaterial,
+            (< 7, < 7) => materials.BrickMaterial,
+            (>= 7, < 7) => materials.StoneMaterial,
+            (< 7, >= 7) => materials.TileMaterial,
             _ => materials.SandstoneMaterial
         };
     }
 
     private void GenerateFloor( MeshSystem meshSystem, Materials materials )
     {
-        List<Vertex> vertices = [];
-        List<uint> indices = [];
+        List<Vertex> vertices = [ ];
+        List<uint> indices = [ ];
 
         Vector4D<float> white = new( 1, 1, 1, 1 );
         Vector3D<float> normal = new( 0, 1, 0 );
-        float uvScale = 5.0f;
+        const float uvScale = 5.0f;
 
         vertices.Add( new Vertex( new Vector3D<float>( 0, 0, 0 ), new Vector2D<float>( 0, 0 ), white, 0, normal ) );
-        vertices.Add( new Vertex( new Vector3D<float>( _grid.Width, 0, 0 ), new Vector2D<float>( uvScale, 0 ), white, 0, normal ) );
-        vertices.Add( new Vertex( new Vector3D<float>( _grid.Width, 0, _grid.Height ), new Vector2D<float>( uvScale, uvScale ), white, 0, normal ) );
-        vertices.Add( new Vertex( new Vector3D<float>( 0, 0, _grid.Height ), new Vector2D<float>( 0, uvScale ), white, 0, normal ) );
+        vertices.Add( new Vertex( new Vector3D<float>( _grid.Width, 0, 0 ), new Vector2D<float>( uvScale, 0 ), white, 0,
+            normal ) );
+        vertices.Add( new Vertex( new Vector3D<float>( _grid.Width, 0, _grid.Height ),
+            new Vector2D<float>( uvScale, uvScale ), white, 0, normal ) );
+        vertices.Add( new Vertex( new Vector3D<float>( 0, 0, _grid.Height ), new Vector2D<float>( 0, uvScale ), white,
+            0, normal ) );
 
-        indices.AddRange( [0, 1, 2, 0, 2, 3] );
+        indices.AddRange( [ 0, 1, 2, 0, 2, 3 ] );
 
         Entity floorEntity = World.Spawn();
         World.Add( floorEntity, new Transform
@@ -190,7 +194,8 @@ public class MazeSystem : SystemBase
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );
-        World.Add( floorEntity, meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), materials.GrassMaterial ) );
+        World.Add( floorEntity,
+            meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), materials.GrassMaterial ) );
     }
 
     private void AddQuad( List<Vertex> vertices, List<uint> indices,
@@ -207,6 +212,6 @@ public class MazeSystem : SystemBase
         vertices.Add( new Vertex( v2, new Vector2D<float>( width, height ), color, 0, normal ) );
         vertices.Add( new Vertex( v3, new Vector2D<float>( 0, height ), color, 0, normal ) );
 
-        indices.AddRange( [offset, offset + 1, offset + 2, offset, offset + 2, offset + 3] );
+        indices.AddRange( [ offset, offset + 1, offset + 2, offset, offset + 2, offset + 3 ] );
     }
 }

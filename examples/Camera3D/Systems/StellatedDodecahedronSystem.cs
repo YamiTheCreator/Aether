@@ -20,7 +20,7 @@ public class StellatedDodecahedronSystem : SystemBase
     }
 
     protected override void OnUpdate( float deltaTime ) { }
-
+    
     protected override void OnRender()
     {
         if ( _meshSystem == null || _materialSystem == null ) return;
@@ -41,7 +41,7 @@ public class StellatedDodecahedronSystem : SystemBase
     }
 
     protected override void OnDestroy() { }
-
+    
     private void GenerateDodecahedronMeshes( Entity parentEntity, ref StellatedDodecahedron dodecahedron,
         MeshSystem meshSystem, MaterialSystem materialSystem )
     {
@@ -56,17 +56,34 @@ public class StellatedDodecahedronSystem : SystemBase
         GenerateWireframeMesh( edges, parentTransform, meshSystem, materialSystem );
     }
 
+    // Создаём 20 вершин додекаэдра используя золотое сечение
+    // Вершины нормализуются и масштабируются до заданного радиуса
     private Vector3D<float>[] CreateDodecahedronVertices( float radius )
     {
         float phi = ( 1f + MathF.Sqrt( 5f ) ) / 2f;
 
         Vector3D<float>[] verts =
         [
-            new( 1, 1, 1 ), new( 1, 1, -1 ), new( 1, -1, 1 ), new( 1, -1, -1 ),
-            new( -1, 1, 1 ), new( -1, 1, -1 ), new( -1, -1, 1 ), new( -1, -1, -1 ),
-            new( 0, phi, 1 / phi ), new( 0, phi, -1 / phi ), new( 0, -phi, 1 / phi ), new( 0, -phi, -1 / phi ),
-            new( 1 / phi, 0, phi ), new( -1 / phi, 0, phi ), new( 1 / phi, 0, -phi ), new( -1 / phi, 0, -phi ),
-            new( phi, 1 / phi, 0 ), new( phi, -1 / phi, 0 ), new( -phi, 1 / phi, 0 ), new( -phi, -1 / phi, 0 )
+            new( 1, 1, 1 ), 
+            new( 1, 1, -1 ), 
+            new( 1, -1, 1 ),
+            new( 1, -1, -1 ),
+            new( -1, 1, 1 ),
+            new( -1, 1, -1 ),
+            new( -1, -1, 1 ),
+            new( -1, -1, -1 ),
+            new( 0, phi, 1 / phi ),
+            new( 0, phi, -1 / phi ),
+            new( 0, -phi, 1 / phi ),
+            new( 0, -phi, -1 / phi ),
+            new( 1 / phi, 0, phi ), 
+            new( -1 / phi, 0, phi ),
+            new( 1 / phi, 0, -phi ),
+            new( -1 / phi, 0, -phi ),
+            new( phi, 1 / phi, 0 ), 
+            new( phi, -1 / phi, 0 ),
+            new( -phi, 1 / phi, 0 ),
+            new( -phi, -1 / phi, 0 )
         ];
 
         for ( int i = 0; i < verts.Length; i++ )
@@ -74,29 +91,46 @@ public class StellatedDodecahedronSystem : SystemBase
 
         return verts;
     }
-
+    
     private int[][] GetDodecahedronFaces()
     {
         return
         [
-            [ 0, 16, 17, 2, 12 ], [ 0, 12, 13, 4, 8 ], [ 0, 8, 9, 1, 16 ],
-            [ 1, 9, 5, 15, 14 ], [ 1, 14, 3, 17, 16 ], [ 2, 17, 3, 11, 10 ],
-            [ 2, 10, 6, 13, 12 ], [ 3, 14, 15, 7, 11 ], [ 4, 13, 6, 19, 18 ],
-            [ 4, 18, 5, 9, 8 ], [ 5, 18, 19, 7, 15 ], [ 6, 10, 11, 7, 19 ]
+            [ 0, 16, 17, 2, 12 ], 
+            [ 0, 12, 13, 4, 8 ], 
+            [ 0, 8, 9, 1, 16 ],
+            [ 1, 9, 5, 15, 14 ], 
+            [ 1, 14, 3, 17, 16 ], 
+            [ 2, 17, 3, 11, 10 ],
+            [ 2, 10, 6, 13, 12 ], 
+            [ 3, 14, 15, 7, 11 ], 
+            [ 4, 13, 6, 19, 18 ],
+            [ 4, 18, 5, 9, 8 ], 
+            [ 5, 18, 19, 7, 15 ], 
+            [ 6, 10, 11, 7, 19 ]
         ];
     }
-
+    
     private Vector3D<float>[] GetFaceColors()
     {
         return
         [
-            new( 1f, 0.5f, 0.3f ), new( 0.3f, 1f, 0.5f ), new( 0.5f, 0.3f, 1f ),
-            new( 1f, 0.5f, 0.3f ), new( 0.3f, 1f, 0.5f ), new( 0.5f, 0.3f, 1f ),
-            new( 1f, 0.5f, 0.3f ), new( 0.3f, 1f, 0.5f ), new( 0.5f, 0.3f, 1f ),
-            new( 1f, 0.5f, 0.3f ), new( 0.3f, 1f, 0.5f ), new( 0.5f, 0.3f, 1f )
+            new Vector3D<float>( 1f, 0.5f, 0.3f ),
+            new Vector3D<float>( 0.3f, 1f, 0.5f ),
+            new Vector3D<float>( 0.5f, 0.3f, 1f ),
+            new Vector3D<float>( 1f, 0.5f, 0.3f ),
+            new Vector3D<float>( 0.3f, 1f, 0.5f ),
+            new Vector3D<float>( 0.5f, 0.3f, 1f ),
+            new Vector3D<float>( 1f, 0.5f, 0.3f ),
+            new Vector3D<float>( 0.3f, 1f, 0.5f ),
+            new Vector3D<float>( 0.5f, 0.3f, 1f ),
+            new Vector3D<float>( 1f, 0.5f, 0.3f ),
+            new Vector3D<float>( 0.3f, 1f, 0.5f ),
+            new Vector3D<float>( 0.5f, 0.3f, 1f )
         ];
     }
 
+    // Генерируем все грани додекаэдра с пирамидами и собираем рёбра для каркаса
     private List<(Vector3D<float>, Vector3D<float>)> GenerateFaces( Vector3D<float>[] vertices, int[][] faces,
         Vector3D<float>[] colors, float stellationHeight, Transform parentTransform, MeshSystem meshSystem )
     {
@@ -117,6 +151,7 @@ public class StellatedDodecahedronSystem : SystemBase
         return edges;
     }
 
+    // Вычисляем вершину пирамиды для грани: находим центр пятиугольника и выдвигаем по нормали
     private Vector3D<float> CalculateFaceApex( Vector3D<float>[] vertices, int[] pentagon, float stellationHeight )
     {
         Vector3D<float> center = Vector3D<float>.Zero;
@@ -128,6 +163,8 @@ public class StellatedDodecahedronSystem : SystemBase
         return center + normal * stellationHeight;
     }
 
+    // Создаём пирамиду на грани: 5 треугольников от вершины пирамиды к рёбрам пятиугольника
+    // Собираем рёбра для последующего создания каркаса
     private List<(Vector3D<float>, Vector3D<float>)> CreateStellatedFace( Vector3D<float>[] vertices, 
         int[] pentagon, Vector3D<float> apex, Vector3D<float> color, Transform parentTransform, MeshSystem meshSystem )
     {
@@ -152,6 +189,7 @@ public class StellatedDodecahedronSystem : SystemBase
         return edges;
     }
 
+    // Добавляем треугольник с вычислением нормали через векторное произведение
     private void AddTriangle( List<Vertex> vertices, List<uint> indices, 
         Vector3D<float> apex, Vector3D<float> v1, Vector3D<float> v2 )
     {
@@ -171,6 +209,7 @@ public class StellatedDodecahedronSystem : SystemBase
         indices.Add( baseIdx + 2 );
     }
 
+    // Создаём отдельную сущность для грани с мешем и материалом
     private void CreateFaceEntity( List<Vertex> vertices, List<uint> indices, Vector3D<float> color,
         Transform parentTransform, MeshSystem meshSystem )
     {
@@ -189,6 +228,7 @@ public class StellatedDodecahedronSystem : SystemBase
         World.Add( faceEntity, faceMaterial );
     }
 
+    // Генерируем каркас из рёбер: удаляем дубликаты и создаём меш с линиями
     private void GenerateWireframeMesh( List<(Vector3D<float>, Vector3D<float>)> edges,
         Transform parentTransform, MeshSystem meshSystem, MaterialSystem materialSystem )
     {
@@ -197,6 +237,7 @@ public class StellatedDodecahedronSystem : SystemBase
         CreateWireframeEntity( vertices, indices, parentTransform, meshSystem, materialSystem );
     }
 
+    // Удаляем дублирующиеся рёбра, нормализуя их порядок вершин
     private HashSet<(Vector3D<float>, Vector3D<float>)> GetUniqueEdges( 
         List<(Vector3D<float>, Vector3D<float>)> edges )
     {
@@ -211,8 +252,10 @@ public class StellatedDodecahedronSystem : SystemBase
         return uniqueEdges;
     }
 
+    // Нормализуем ребро: меньшая вершина всегда первая (для удаления дубликатов)
     private (Vector3D<float>, Vector3D<float>) NormalizeEdge( (Vector3D<float>, Vector3D<float>) edge )
     {
+        // "Лексикографически" сравниваем порядок, чтобы избежать дублирования
         bool shouldSwap = !( edge.Item1.X < edge.Item2.X ) &&
                          ( edge.Item1.X != edge.Item2.X || !( edge.Item1.Y < edge.Item2.Y ) ) &&
                          ( edge.Item1.X != edge.Item2.X || edge.Item1.Y != edge.Item2.Y || 
@@ -221,6 +264,7 @@ public class StellatedDodecahedronSystem : SystemBase
         return shouldSwap ? edge : ( edge.Item2, edge.Item1 );
     }
 
+    // Создаём геометрию каркаса: каждое ребро становится парой вершин
     private (List<Vertex>, List<uint>) CreateWireframeGeometry( 
         HashSet<(Vector3D<float>, Vector3D<float>)> uniqueEdges )
     {
@@ -240,6 +284,7 @@ public class StellatedDodecahedronSystem : SystemBase
         return (vertices, indices);
     }
 
+    // Создаём сущность для каркаса с топологией линий (PrimitiveType.Lines)
     private void CreateWireframeEntity( List<Vertex> vertices, List<uint> indices, Transform parentTransform,
         MeshSystem meshSystem, MaterialSystem materialSystem )
     {

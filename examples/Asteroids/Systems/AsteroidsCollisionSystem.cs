@@ -9,12 +9,12 @@ namespace Asteroids.Systems;
 public class AsteroidsCollisionSystem : SystemBase
 {
     protected override void OnCreate() { }
-
+    
     private Vector2D<float>[] GetTransformedVertices( Entity entity )
     {
         ref Collider collider = ref World.Get<Collider>( entity );
         ref Transform transform = ref World.Get<Transform>( entity );
-        return CollisionSystem.GetTransformedPolygon( collider.LocalVertices, transform );
+        return TransformSystem.GetTransformedPolygon( collider.LocalVertices, transform );
     }
 
     private void RemoveEntities( List<Entity> entities )
@@ -24,7 +24,7 @@ public class AsteroidsCollisionSystem : SystemBase
             World.Despawn( entity );
         }
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         GameStateSystem? gameStateSystem = World.GetSystem<GameStateSystem>();
@@ -40,7 +40,7 @@ public class AsteroidsCollisionSystem : SystemBase
     protected override void OnRender() { }
 
     protected override void OnDestroy() { }
-
+    
     private void CheckBulletAsteroidCollisions()
     {
         List<Entity> bulletsToRemove = [ ];
@@ -53,10 +53,10 @@ public class AsteroidsCollisionSystem : SystemBase
             {
                 Vector2D<float>[] asteroidVertices = GetTransformedVertices( asteroidEntity );
 
-                if ( CollisionSystem.GJK( bulletVertices, asteroidVertices ) )
+                if ( CollisionSystem.Gjk( bulletVertices, asteroidVertices ) )
                 {
                     bulletsToRemove.Add( bulletEntity );
-                    HandleBulletAsteroidCollision( asteroidEntity );
+                    SplitAsteroid( asteroidEntity );
                     break;
                 }
             }
@@ -64,13 +64,7 @@ public class AsteroidsCollisionSystem : SystemBase
 
         RemoveEntities( bulletsToRemove );
     }
-
-    private void HandleBulletAsteroidCollision( Entity asteroidEntity )
-    {
-        AsteroidSystem? asteroidSystem = World.GetSystem<AsteroidSystem>();
-        asteroidSystem?.SplitAsteroid( asteroidEntity );
-    }
-
+    
     private void CheckSpaceshipAsteroidCollisions()
     {
         List<Entity> shipsToRemove = [ ];
@@ -83,7 +77,7 @@ public class AsteroidsCollisionSystem : SystemBase
             {
                 Vector2D<float>[] asteroidVertices = GetTransformedVertices( asteroidEntity );
 
-                if ( CollisionSystem.GJK( spaceshipVertices, asteroidVertices ) )
+                if ( CollisionSystem.Gjk( spaceshipVertices, asteroidVertices ) )
                 {
                     HandleSpaceshipAsteroidCollision( spaceshipEntity, asteroidEntity );
                     shipsToRemove.Add( spaceshipEntity );
@@ -94,7 +88,7 @@ public class AsteroidsCollisionSystem : SystemBase
 
         DestroySpaceships( shipsToRemove );
     }
-
+    
     private void HandleSpaceshipAsteroidCollision( Entity spaceshipEntity, Entity asteroidEntity )
     {
         ref Spaceship spaceship = ref World.Get<Spaceship>( spaceshipEntity );
@@ -103,19 +97,19 @@ public class AsteroidsCollisionSystem : SystemBase
         SpawnExplosionEffect( spaceshipTransform.Position, spaceship.Velocity );
         SplitAsteroid( asteroidEntity );
     }
-
+    
     private void SpawnExplosionEffect( Vector3D<float> position, Vector2D<float> velocity )
     {
         ParticleSystem? particleSystem = World.GetSystem<ParticleSystem>();
         particleSystem?.SpawnExplosion( position, velocity, new Vector4D<float>( 0.2f, 0.8f, 1f, 1f ), 12 );
     }
-
+    
     private void SplitAsteroid( Entity asteroidEntity )
     {
         AsteroidSystem? asteroidSystem = World.GetSystem<AsteroidSystem>();
         asteroidSystem?.SplitAsteroid( asteroidEntity );
     }
-
+    
     private void DestroySpaceships( List<Entity> shipsToRemove )
     {
         foreach ( Entity shipEntity in shipsToRemove )
@@ -124,7 +118,7 @@ public class AsteroidsCollisionSystem : SystemBase
             NotifyGameStateOfDeath();
         }
     }
-
+    
     private void NotifyGameStateOfDeath()
     {
         GameStateSystem? gameStateSystem = World.GetSystem<GameStateSystem>();

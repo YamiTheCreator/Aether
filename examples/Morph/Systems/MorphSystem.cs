@@ -20,6 +20,7 @@ public class MorphSystem( GL gl ) : SystemBase
         _input = World.GetGlobal<Input>();
     }
 
+    // Обновляем время морфинга между сферой и тором
     protected override void OnUpdate( float deltaTime )
     {
         if ( _inputSystem is null || _input is null )
@@ -33,7 +34,7 @@ public class MorphSystem( GL gl ) : SystemBase
             UpdateMorphTime( ref morph, deltaTime );
         }
     }
-
+    
     private void HandleInput( ref Morph morph )
     {
         if ( _inputSystem!.IsKeyPressed( _input!, Key.R ) )
@@ -133,7 +134,8 @@ public class MorphSystem( GL gl ) : SystemBase
     protected override void OnDestroy()
     {
     }
-
+    
+    // Сглаживание ко времени
     private float SmoothStep( float t )
     {
         return t * t * ( 3f - 2f * t );

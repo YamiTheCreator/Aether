@@ -1,3 +1,4 @@
+using Aether.Core.Extensions;
 using Graphics.Components;
 using Silk.NET.Maths;
 
@@ -5,7 +6,9 @@ namespace Graphics.Systems;
 
 public static class CollisionSystem
 {
-    public static bool GJK( Vector2D<float>[] shapeA, Vector2D<float>[] shapeB )
+    // Алгоритм GJK (Gilbert-Johnson-Keerthi) для определения пересечения двух выпуклых фигур в 2D
+    // Работает через построение симплекса в пространстве разности Минковского
+    public static bool Gjk( Vector2D<float>[] shapeA, Vector2D<float>[] shapeB )
     {
         Vector2D<float> direction = new( 1, 0 );
         List<Vector2D<float>> simplex = InitializeSimplex( shapeA, shapeB, ref direction );
@@ -14,16 +17,18 @@ public static class CollisionSystem
         return IterateGJK( shapeA, shapeB, simplex, ref direction, maxIterations );
     }
 
+    // Симплекс - набор опорных точек, в 2D не более 3х
     private static List<Vector2D<float>> InitializeSimplex( Vector2D<float>[] shapeA, Vector2D<float>[] shapeB,
         ref Vector2D<float> direction )
     {
-        List<Vector2D<float>> simplex = new();
+        List<Vector2D<float>> simplex = [ ];
         Vector2D<float> support = GetSupport( shapeA, shapeB, direction );
         simplex.Add( support );
         direction = -support;
         return simplex;
     }
-
+    
+    // Запрашиваем точки разности, проверяя, находятся ли они ближе к началу координат.
     private static bool IterateGJK( Vector2D<float>[] shapeA, Vector2D<float>[] shapeB,
         List<Vector2D<float>> simplex, ref Vector2D<float> direction, int maxIterations )
     {
@@ -47,11 +52,14 @@ public static class CollisionSystem
         return false;
     }
 
+    // Проверяем, что опорная точка находится в направлении поиска
+    // Если нет - фигуры не пересекаются
     private static bool IsSupportValid( Vector2D<float> support, Vector2D<float> direction )
     {
         return Vector2D.Dot( support, direction ) > 0;
     }
 
+    // Возвращаем точку в пространстве разности Минковского
     private static Vector2D<float> GetSupport( Vector2D<float>[] shapeA, Vector2D<float>[] shapeB,
         Vector2D<float> direction )
     {
@@ -60,6 +68,8 @@ public static class CollisionSystem
         return pointA - pointB;
     }
 
+    // Для каждой точки берем скалярное произведение точки на направление,
+    // у самой удаленной точки будет наибольшая проекция
     private static Vector2D<float> GetFarthestPointInDirection( Vector2D<float>[] shape, Vector2D<float> direction )
     {
         float maxDot = float.MinValue;
@@ -78,6 +88,8 @@ public static class CollisionSystem
         return farthest;
     }
 
+    // Делегируем обработку симплекса в зависимости от количества точек
+    // 2 точки - линия, 3 точки - треугольник
     private static bool ProcessSimplex( List<Vector2D<float>> simplex, ref Vector2D<float> direction )
     {
         if ( simplex.Count == 2 )
@@ -88,6 +100,8 @@ public static class CollisionSystem
         return ProcessTriangle( simplex, ref direction );
     }
 
+    // Process методы позволяют узнать с какой стороны находится начало координат и направить туда direction вектор
+    // Делается это с помощью векторного произведения, которое позволяет нам получить новый вектор перпендикулярный прошлым
     private static bool ProcessLine( List<Vector2D<float>> simplex, ref Vector2D<float> direction )
     {
         Vector2D<float> a = simplex[ 1 ];
@@ -108,6 +122,8 @@ public static class CollisionSystem
         return false;
     }
 
+    // Обрабатываем треугольник - проверяем с какой стороны от рёбер находится начало координат
+    // Если начало внутри треугольника - коллизия найдена
     private static bool ProcessTriangle( List<Vector2D<float>> simplex, ref Vector2D<float> direction )
     {
         Vector2D<float> a = simplex[ 2 ];
@@ -138,6 +154,7 @@ public static class CollisionSystem
         return true;
     }
 
+    // векторное произведение -> дает вектор перпендикулярный a и направленный в сторону b
     private static Vector2D<float> TripleProduct( Vector2D<float> a, Vector2D<float> b, Vector2D<float> c )
     {
         float ac = a.X * c.X + a.Y * c.Y;
@@ -145,37 +162,8 @@ public static class CollisionSystem
         return new Vector2D<float>( b.X * ac - a.X * bc, b.Y * ac - a.Y * bc );
     }
 
-    public static Vector2D<float>[] GetTransformedPolygon( Vector2D<float>[] localVertices, Transform transform )
-    {
-        Vector2D<float>[] transformed = new Vector2D<float>[ localVertices.Length ];
-
-        float rotation = GetAngleFromQuaternion( transform.Rotation );
-
-        float cos = MathF.Cos( rotation );
-        float sin = MathF.Sin( rotation );
-
-        for ( int i = 0; i < localVertices.Length; i++ )
-        {
-            float x = localVertices[ i ].X * transform.Scale.X;
-            float y = localVertices[ i ].Y * transform.Scale.Y;
-
-            float rotatedX = x * cos - y * sin;
-            float rotatedY = x * sin + y * cos;
-
-            transformed[ i ] = new Vector2D<float>(
-                rotatedX + transform.Position.X,
-                rotatedY + transform.Position.Y
-            );
-        }
-
-        return transformed;
-    }
-
-    private static float GetAngleFromQuaternion( Quaternion<float> rotation )
-    {
-        return 2f * MathF.Atan2( rotation.Z, rotation.W );
-    }
-
+    // AABB проверка коллизий для простых случаев в 2D через круг и тайлы
+    // Проверяем пересечение круга с сеткой тайлов, используя ближайшую точку на тайле
     public static bool CheckCircleGridCollision<T>( T grid, float worldX, float worldZ, float radius,
         Func<T, int, int, bool> isWallFunc, int gridWidth, int gridHeight )
     {
@@ -207,217 +195,5 @@ public static class CollisionSystem
         }
 
         return false;
-    }
-
-    public static bool GJK3D( Vector3D<float>[] shapeA, Vector3D<float>[] shapeB )
-    {
-        Vector3D<float> direction = new( 1, 0, 0 );
-        List<Vector3D<float>> simplex = InitializeSimplex3D( shapeA, shapeB, ref direction );
-
-        const int maxIterations = 64;
-        return IterateGJK3D( shapeA, shapeB, simplex, ref direction, maxIterations );
-    }
-
-    private static List<Vector3D<float>> InitializeSimplex3D( Vector3D<float>[] shapeA, Vector3D<float>[] shapeB,
-        ref Vector3D<float> direction )
-    {
-        List<Vector3D<float>> simplex = new();
-        Vector3D<float> support = GetSupport3D( shapeA, shapeB, direction );
-        simplex.Add( support );
-        direction = -support;
-        return simplex;
-    }
-
-    private static bool IterateGJK3D( Vector3D<float>[] shapeA, Vector3D<float>[] shapeB,
-        List<Vector3D<float>> simplex, ref Vector3D<float> direction, int maxIterations )
-    {
-        for ( int i = 0; i < maxIterations; i++ )
-        {
-            Vector3D<float> support = GetSupport3D( shapeA, shapeB, direction );
-
-            if ( !IsSupportValid3D( support, direction ) )
-            {
-                return false;
-            }
-
-            simplex.Add( support );
-
-            if ( ProcessSimplex3D( simplex, ref direction ) )
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool IsSupportValid3D( Vector3D<float> support, Vector3D<float> direction )
-    {
-        return Vector3D.Dot( support, direction ) > 0;
-    }
-
-    private static Vector3D<float> GetSupport3D( Vector3D<float>[] shapeA, Vector3D<float>[] shapeB,
-        Vector3D<float> direction )
-    {
-        Vector3D<float> pointA = GetFarthestPointInDirection3D( shapeA, direction );
-        Vector3D<float> pointB = GetFarthestPointInDirection3D( shapeB, -direction );
-        return pointA - pointB;
-    }
-
-    private static Vector3D<float> GetFarthestPointInDirection3D( Vector3D<float>[] shape, Vector3D<float> direction )
-    {
-        float maxDot = float.MinValue;
-        Vector3D<float> farthest = shape[ 0 ];
-
-        foreach ( Vector3D<float> vertex in shape )
-        {
-            float dot = Vector3D.Dot( vertex, direction );
-            if ( dot > maxDot )
-            {
-                maxDot = dot;
-                farthest = vertex;
-            }
-        }
-
-        return farthest;
-    }
-
-    private static bool ProcessSimplex3D( List<Vector3D<float>> simplex, ref Vector3D<float> direction )
-    {
-        switch ( simplex.Count )
-        {
-            case 2:
-                return ProcessLine3D( simplex, ref direction );
-            case 3:
-                return ProcessTriangle3D( simplex, ref direction );
-            case 4:
-                return ProcessTetrahedron( simplex, ref direction );
-            default:
-                return false;
-        }
-    }
-
-    private static bool ProcessLine3D( List<Vector3D<float>> simplex, ref Vector3D<float> direction )
-    {
-        Vector3D<float> a = simplex[ 1 ];
-        Vector3D<float> b = simplex[ 0 ];
-        Vector3D<float> ab = b - a;
-        Vector3D<float> ao = -a;
-
-        if ( Vector3D.Dot( ab, ao ) > 0 )
-        {
-            direction = Vector3D.Cross( Vector3D.Cross( ab, ao ), ab );
-        }
-        else
-        {
-            simplex.RemoveAt( 0 );
-            direction = ao;
-        }
-
-        return false;
-    }
-
-    private static bool ProcessTriangle3D( List<Vector3D<float>> simplex, ref Vector3D<float> direction )
-    {
-        Vector3D<float> a = simplex[ 2 ];
-        Vector3D<float> b = simplex[ 1 ];
-        Vector3D<float> c = simplex[ 0 ];
-
-        Vector3D<float> ab = b - a;
-        Vector3D<float> ac = c - a;
-        Vector3D<float> ao = -a;
-
-        Vector3D<float> abc = Vector3D.Cross( ab, ac );
-
-        if ( Vector3D.Dot( Vector3D.Cross( abc, ac ), ao ) > 0 )
-        {
-            if ( Vector3D.Dot( ac, ao ) > 0 )
-            {
-                simplex.RemoveAt( 1 );
-                direction = Vector3D.Cross( Vector3D.Cross( ac, ao ), ac );
-            }
-            else
-            {
-                simplex.RemoveAt( 0 );
-                simplex.RemoveAt( 0 );
-                direction = Vector3D.Dot( ab, ao ) > 0
-                    ? Vector3D.Cross( Vector3D.Cross( ab, ao ), ab )
-                    : ao;
-            }
-
-            return false;
-        }
-
-        if ( Vector3D.Dot( Vector3D.Cross( ab, abc ), ao ) > 0 )
-        {
-            simplex.RemoveAt( 0 );
-            direction = Vector3D.Dot( ab, ao ) > 0
-                ? Vector3D.Cross( Vector3D.Cross( ab, ao ), ab )
-                : ao;
-            return false;
-        }
-
-        if ( Vector3D.Dot( abc, ao ) > 0 )
-        {
-            direction = abc;
-        }
-        else
-        {
-            ( simplex[ 0 ], simplex[ 1 ] ) = ( simplex[ 1 ], simplex[ 0 ] );
-            direction = -abc;
-        }
-
-        return false;
-    }
-
-    private static bool ProcessTetrahedron( List<Vector3D<float>> simplex, ref Vector3D<float> direction )
-    {
-        Vector3D<float> a = simplex[ 3 ];
-        Vector3D<float> b = simplex[ 2 ];
-        Vector3D<float> c = simplex[ 1 ];
-        Vector3D<float> d = simplex[ 0 ];
-
-        Vector3D<float> ab = b - a;
-        Vector3D<float> ac = c - a;
-        Vector3D<float> ad = d - a;
-        Vector3D<float> ao = -a;
-
-        Vector3D<float> abc = Vector3D.Cross( ab, ac );
-        Vector3D<float> acd = Vector3D.Cross( ac, ad );
-        Vector3D<float> adb = Vector3D.Cross( ad, ab );
-
-        if ( Vector3D.Dot( abc, ao ) > 0 )
-        {
-            simplex.RemoveAt( 0 );
-            return ProcessTriangle3D( simplex, ref direction );
-        }
-
-        if ( Vector3D.Dot( acd, ao ) > 0 )
-        {
-            simplex.RemoveAt( 2 );
-            return ProcessTriangle3D( simplex, ref direction );
-        }
-
-        if ( Vector3D.Dot( adb, ao ) > 0 )
-        {
-            simplex.RemoveAt( 1 );
-            return ProcessTriangle3D( simplex, ref direction );
-        }
-
-        return true;
-    }
-
-    public static Vector3D<float>[] GetTransformedVertices3D( Vector3D<float>[] localVertices, Transform transform )
-    {
-        Vector3D<float>[] transformed = new Vector3D<float>[ localVertices.Length ];
-
-        for ( int i = 0; i < localVertices.Length; i++ )
-        {
-            Vector3D<float> scaled = localVertices[ i ] * transform.Scale;
-            Vector3D<float> rotated = Vector3D.Transform( scaled, transform.Rotation );
-            transformed[ i ] = rotated + transform.Position;
-        }
-
-        return transformed;
     }
 }

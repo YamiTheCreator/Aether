@@ -25,7 +25,7 @@ public class OrbitCameraController : SystemBase
         _inputSystem = World.GetGlobal<InputSystem>();
         _input = World.GetGlobal<Input>();
     }
-
+    
     protected override void OnUpdate( float deltaTime )
     {
         if ( _inputSystem is null || _input is null )
@@ -40,7 +40,7 @@ public class OrbitCameraController : SystemBase
             UpdateCameraPosition( ref transform );
         }
     }
-
+    
     private void HandleMouseRotation()
     {
         System.Numerics.Vector2 mousePos = _inputSystem!.GetMousePosition( _input! );
@@ -67,14 +67,14 @@ public class OrbitCameraController : SystemBase
 
         _lastMousePos = mousePosVec;
     }
-
+    
     private void HandleZoom( float deltaTime )
     {
         float zoomDelta = 0f;
 
         if ( _inputSystem!.IsKeyDown( _input!, Key.Q ) )
             zoomDelta -= _scrollSpeed * deltaTime * 10f;
-        if ( _inputSystem.IsKeyDown( _input, Key.E ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.E ) )
             zoomDelta += _scrollSpeed * deltaTime * 10f;
 
         if ( zoomDelta != 0f )
@@ -83,7 +83,7 @@ public class OrbitCameraController : SystemBase
             _distance = Math.Clamp( _distance, _minDistance, _maxDistance );
         }
     }
-
+    
     private void UpdateCameraPosition( ref Transform transform )
     {
         CameraSystem.SetOrbitPosition(

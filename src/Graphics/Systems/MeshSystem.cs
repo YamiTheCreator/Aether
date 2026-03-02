@@ -15,17 +15,8 @@ public class MeshSystem( GL gl ) : SystemBase
 
     protected override void OnRender()
     {
-        Camera camera = default;
-        bool cameraFound = false;
-
-        foreach ( Entity e in World.Filter<Camera>() )
-        {
-            camera = World.Get<Camera>( e );
-            cameraFound = true;
-            break;
-        }
-
-        if ( !cameraFound ) return;
+        Camera? camera = GetCamera();
+        if ( !camera.HasValue ) return;
 
         MaterialSystem? materialSystem = World.GetSystem<MaterialSystem>();
 
@@ -34,26 +25,37 @@ public class MeshSystem( GL gl ) : SystemBase
             ref Mesh mesh = ref World.Get<Mesh>( entity );
             ref Transform transform = ref World.Get<Transform>( entity );
 
-            Material? material = null;
-
-            if ( World.Has<Material>( entity ) )
-            {
-                material = World.Get<Material>( entity );
-            }
-            else if ( mesh.Material.HasValue )
-            {
-                material = mesh.Material.Value;
-            }
+            Material? material = GetMaterial( entity, mesh );
 
             if ( material.HasValue )
             {
-                RenderMeshWithMaterial( mesh, transform, material.Value, materialSystem, camera );
+                RenderMeshWithMaterial( mesh, transform, material.Value, materialSystem, camera.Value );
             }
             else
             {
-                RenderMeshBasic( mesh, transform, camera );
+                RenderMeshBasic( mesh, transform, camera.Value );
             }
         }
+    }
+
+    private Camera? GetCamera()
+    {
+        foreach ( Entity e in World.Filter<Camera>() )
+        {
+            return World.Get<Camera>( e );
+        }
+
+        return null;
+    }
+
+    private Material? GetMaterial( Entity entity, Mesh mesh )
+    {
+        if ( World.Has<Material>( entity ) )
+        {
+            return World.Get<Material>( entity );
+        }
+
+        return mesh.Material;
     }
 
     protected override void OnDestroy() { }
@@ -64,23 +66,7 @@ public class MeshSystem( GL gl ) : SystemBase
         BufferObject vbo = new( gl, BufferTargetARB.ArrayBuffer );
         BufferObject ebo = new( gl, BufferTargetARB.ElementArrayBuffer );
 
-        vao.Bind();
-
-        vbo.Bind();
-        vbo.SetData( vertices, BufferUsageARB.StaticDraw );
-
-        uint stride = ( uint )Vertex.SizeInBytes;
-
-        vao.SetVertexAttribute( 0, 3, VertexAttribPointerType.Float, false, stride, 0 );
-        vao.SetVertexAttribute( 1, 2, VertexAttribPointerType.Float, false, stride, 12 );
-        vao.SetVertexAttribute( 2, 4, VertexAttribPointerType.Float, false, stride, 20 );
-        vao.SetVertexAttribute( 3, 1, VertexAttribPointerType.Float, false, stride, 36 );
-        vao.SetVertexAttribute( 4, 3, VertexAttribPointerType.Float, false, stride, 40 );
-
-        ebo.Bind();
-        ebo.SetData( indices, BufferUsageARB.StaticDraw );
-
-        vao.Unbind();
+        SetupMeshBuffers( vao, vbo, ebo, vertices, indices );
 
         return new Mesh
         {
@@ -98,23 +84,7 @@ public class MeshSystem( GL gl ) : SystemBase
         BufferObject vbo = new( gl, BufferTargetARB.ArrayBuffer );
         BufferObject ebo = new( gl, BufferTargetARB.ElementArrayBuffer );
 
-        vao.Bind();
-
-        vbo.Bind();
-        vbo.SetData( vertices, BufferUsageARB.StaticDraw );
-
-        uint stride = ( uint )Vertex.SizeInBytes;
-
-        vao.SetVertexAttribute( 0, 3, VertexAttribPointerType.Float, false, stride, 0 );
-        vao.SetVertexAttribute( 1, 2, VertexAttribPointerType.Float, false, stride, 12 );
-        vao.SetVertexAttribute( 2, 4, VertexAttribPointerType.Float, false, stride, 20 );
-        vao.SetVertexAttribute( 3, 1, VertexAttribPointerType.Float, false, stride, 36 );
-        vao.SetVertexAttribute( 4, 3, VertexAttribPointerType.Float, false, stride, 40 );
-
-        ebo.Bind();
-        ebo.SetData( indices, BufferUsageARB.StaticDraw );
-
-        vao.Unbind();
+        SetupMeshBuffers( vao, vbo, ebo, vertices, indices );
 
         return new Mesh
         {
@@ -126,23 +96,63 @@ public class MeshSystem( GL gl ) : SystemBase
         };
     }
 
+    private static void SetupMeshBuffers( ArrayObject vao, BufferObject vbo, BufferObject ebo,
+        ReadOnlySpan<Vertex> vertices, ReadOnlySpan<uint> indices )
+    {
+        vao.Bind();
+
+        vbo.Bind();
+        vbo.SetData( vertices, BufferUsageARB.StaticDraw );
+
+        SetupVertexAttributes( vao );
+
+        ebo.Bind();
+        ebo.SetData( indices, BufferUsageARB.StaticDraw );
+
+        vao.Unbind();
+    }
+
+    private static void SetupVertexAttributes( ArrayObject vao )
+    {
+        uint stride = ( uint )Vertex.SizeInBytes;
+
+        vao.SetVertexAttribute( 0, 3, VertexAttribPointerType.Float, false, stride, 0 );
+        vao.SetVertexAttribute( 1, 2, VertexAttribPointerType.Float, false, stride, 12 );
+        vao.SetVertexAttribute( 2, 4, VertexAttribPointerType.Float, false, stride, 20 );
+        vao.SetVertexAttribute( 3, 1, VertexAttribPointerType.Float, false, stride, 36 );
+        vao.SetVertexAttribute( 4, 3, VertexAttribPointerType.Float, false, stride, 40 );
+    }
+
     private void RenderMeshBasic( Mesh mesh, Transform transform, Camera camera )
     {
-        ShaderSystem? shaderSystem = World.GetSystem<ShaderSystem>();
+        ShaderProgram? shader = GetBasicShader();
+        if ( shader == null ) return;
 
-        ShaderComponent? basicShader = shaderSystem?.GetBasicShader();
-        if ( !basicShader.HasValue ) return;
-
-        ShaderProgram shader = basicShader.Value.Program;
         shader.Use();
 
+        SetBasicUniforms( shader, transform, camera );
+        DrawMesh( mesh );
+    }
+
+    private ShaderProgram? GetBasicShader()
+    {
+        ShaderSystem? shaderSystem = World.GetSystem<ShaderSystem>();
+        ShaderComponent? basicShader = shaderSystem?.GetBasicShader();
+        return basicShader?.Program;
+    }
+
+    private void SetBasicUniforms( ShaderProgram shader, Transform transform, Camera camera )
+    {
         shader.TrySetUniform( "uViewProjection", camera.ViewProjectionMatrix );
         Matrix4X4<float> model =
             TransformSystem.CreateModelMatrix( transform.Position, transform.Rotation, transform.Scale );
         shader.SetUniform( "uModel", model );
         shader.SetUniform( "uColor", new Vector4D<float>( 1, 1, 1, 1 ) );
         shader.SetUniform( "uHasTexture", 0 );
+    }
 
+    private void DrawMesh( Mesh mesh )
+    {
         mesh.Vao.Bind();
         unsafe
         {
@@ -155,89 +165,126 @@ public class MeshSystem( GL gl ) : SystemBase
     private void RenderMeshWithMaterial( Mesh mesh, Transform transform, Material material,
         MaterialSystem? materialSystem, Camera camera )
     {
-        ShaderProgram shader;
-
-        if ( material.Shader.HasValue )
-        {
-            shader = material.Shader.Value.Program;
-        }
-        else
-        {
-            ShaderSystem? shaderSystem = World.GetSystem<ShaderSystem>();
-            ShaderComponent? pbrShader = shaderSystem?.GetPbrShader();
-            if ( !pbrShader.HasValue ) return;
-            shader = pbrShader.Value.Program;
-        }
+        ShaderProgram? shader = GetMaterialShader( material );
+        if ( shader == null ) return;
 
         shader.Use();
 
-        shader.TrySetUniform( "uViewProjection", camera.ViewProjectionMatrix );
-        Matrix4X4<float> model =
-            TransformSystem.CreateModelMatrix( transform.Position, transform.Rotation, transform.Scale );
-        shader.TrySetUniform( "uModel", model );
-
-        Vector3D<float> cameraPosition = Vector3D<float>.Zero;
-        foreach ( Entity e in World.Filter<Camera, Transform>() )
-        {
-            cameraPosition = World.Get<Transform>( e ).Position;
-            break;
-        }
-
-        shader.TrySetUniform( "uCameraPosition", cameraPosition );
-
+        SetMaterialUniforms( shader, transform, camera );
         BindLights( shader );
 
         materialSystem?.BindMaterial( ref material, shader );
         material.SetCustomUniforms?.Invoke( shader );
 
-        mesh.Vao.Bind();
-        unsafe
+        DrawMesh( mesh );
+    }
+
+    private ShaderProgram? GetMaterialShader( Material material )
+    {
+        if ( material.Shader.HasValue )
         {
-            gl.DrawElements( mesh.Topology, ( uint )mesh.IndexCount, DrawElementsType.UnsignedInt, null );
+            return material.Shader.Value.Program;
         }
 
-        mesh.Vao.Unbind();
+        ShaderSystem? shaderSystem = World.GetSystem<ShaderSystem>();
+        ShaderComponent? pbrShader = shaderSystem?.GetPbrShader();
+        return pbrShader?.Program;
+    }
+
+    private void SetMaterialUniforms( ShaderProgram shader, Transform transform, Camera camera )
+    {
+        shader.TrySetUniform( "uViewProjection", camera.ViewProjectionMatrix );
+        Matrix4X4<float> model =
+            TransformSystem.CreateModelMatrix( transform.Position, transform.Rotation, transform.Scale );
+        shader.TrySetUniform( "uModel", model );
+
+        Vector3D<float> cameraPosition = GetCameraPosition();
+        shader.TrySetUniform( "uCameraPosition", cameraPosition );
+    }
+
+    private Vector3D<float> GetCameraPosition()
+    {
+        foreach ( Entity e in World.Filter<Camera, Transform>() )
+        {
+            return World.Get<Transform>( e ).Position;
+        }
+
+        return Vector3D<float>.Zero;
     }
 
     private void BindLights( ShaderProgram shader )
     {
-        int lightCount = 0;
-        Vector3D<float>[] positions = new Vector3D<float>[ 4 ];
-        Vector4D<float>[] colors = new Vector4D<float>[ 4 ];
-        Vector3D<float>[] ambient = new Vector3D<float>[ 4 ];
-        Vector3D<float>[] specular = new Vector3D<float>[ 4 ];
+        const int maxLights = 4;
+        LightData[] lights = CollectLights( maxLights );
+
+        shader.TrySetUniform( "uNumLights", lights.Length );
+
+        for ( int i = 0; i < maxLights; i++ )
+        {
+            if ( i < lights.Length )
+            {
+                SetLightUniforms( shader, i, lights[ i ] );
+            }
+            else
+            {
+                SetEmptyLightUniforms( shader, i );
+            }
+        }
+    }
+
+    private LightData[] CollectLights( int maxLights )
+    {
+        List<LightData> lights = [ ];
 
         foreach ( Entity entity in World.Filter<Light>() )
         {
-            if ( lightCount >= 4 ) break;
-            if ( !World.Has<Transform>( entity ) )
-                continue;
+            if ( lights.Count >= maxLights ) break;
+            if ( !World.Has<Transform>( entity ) ) continue;
 
             ref Light light = ref World.Get<Light>( entity );
             if ( !light.Enabled ) continue;
 
             ref Transform transform = ref World.Get<Transform>( entity );
 
-            positions[ lightCount ] = transform.Position;
-            colors[ lightCount ] = new Vector4D<float>( light.DiffuseColor.X, light.DiffuseColor.Y,
-                light.DiffuseColor.Z, light.Intensity );
-            ambient[ lightCount ] = light.AmbientColor;
-            specular[ lightCount ] = light.SpecularColor;
-
-            lightCount++;
+            lights.Add( new LightData
+            {
+                Position = transform.Position,
+                DiffuseColor = light.DiffuseColor,
+                Intensity = light.Intensity,
+                AmbientColor = light.AmbientColor,
+                SpecularColor = light.SpecularColor
+            } );
         }
 
-        shader.TrySetUniform( "uNumLights", lightCount );
+        return lights.ToArray();
+    }
 
-        for ( int i = 0; i < 4; i++ )
-        {
-            shader.TrySetUniform( $"uPointLightPositions[{i}]",
-                new Vector4D<float>( positions[ i ].X, positions[ i ].Y, positions[ i ].Z, 1.0f ) );
-            shader.TrySetUniform( $"uPointLightColors[{i}]", colors[ i ] );
-            shader.TrySetUniform( $"uPointLightAmbient[{i}]",
-                new Vector4D<float>( ambient[ i ].X, ambient[ i ].Y, ambient[ i ].Z, 1.0f ) );
-            shader.TrySetUniform( $"uPointLightSpecular[{i}]",
-                new Vector4D<float>( specular[ i ].X, specular[ i ].Y, specular[ i ].Z, 1.0f ) );
-        }
+    private void SetLightUniforms( ShaderProgram shader, int index, LightData light )
+    {
+        shader.TrySetUniform( $"uPointLightPositions[{index}]",
+            new Vector4D<float>( light.Position.X, light.Position.Y, light.Position.Z, 1.0f ) );
+        shader.TrySetUniform( $"uPointLightColors[{index}]",
+            new Vector4D<float>( light.DiffuseColor.X, light.DiffuseColor.Y, light.DiffuseColor.Z, light.Intensity ) );
+        shader.TrySetUniform( $"uPointLightAmbient[{index}]",
+            new Vector4D<float>( light.AmbientColor.X, light.AmbientColor.Y, light.AmbientColor.Z, 1.0f ) );
+        shader.TrySetUniform( $"uPointLightSpecular[{index}]",
+            new Vector4D<float>( light.SpecularColor.X, light.SpecularColor.Y, light.SpecularColor.Z, 1.0f ) );
+    }
+
+    private void SetEmptyLightUniforms( ShaderProgram shader, int index )
+    {
+        shader.TrySetUniform( $"uPointLightPositions[{index}]", Vector4D<float>.Zero );
+        shader.TrySetUniform( $"uPointLightColors[{index}]", Vector4D<float>.Zero );
+        shader.TrySetUniform( $"uPointLightAmbient[{index}]", Vector4D<float>.Zero );
+        shader.TrySetUniform( $"uPointLightSpecular[{index}]", Vector4D<float>.Zero );
+    }
+
+    private struct LightData
+    {
+        public Vector3D<float> Position;
+        public Vector3D<float> DiffuseColor;
+        public float Intensity;
+        public Vector3D<float> AmbientColor;
+        public Vector3D<float> SpecularColor;
     }
 }

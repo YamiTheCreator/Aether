@@ -63,15 +63,15 @@ public class FreeCameraController : SystemBase
 
         if ( _inputSystem!.IsKeyDown( _input!, Key.W ) )
             moveDir += transform.Forward;
-        if ( _inputSystem.IsKeyDown( _input, Key.S ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.S ) )
             moveDir -= transform.Forward;
-        if ( _inputSystem.IsKeyDown( _input, Key.A ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.A ) )
             moveDir -= transform.Right;
-        if ( _inputSystem.IsKeyDown( _input, Key.D ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.D ) )
             moveDir += transform.Right;
-        if ( _inputSystem.IsKeyDown( _input, Key.Space ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.Space ) )
             moveDir += Vector3D<float>.UnitY;
-        if ( _inputSystem.IsKeyDown( _input, Key.ShiftLeft ) )
+        if ( _inputSystem.IsKeyDown( _input!, Key.ShiftLeft ) )
             moveDir -= Vector3D<float>.UnitY;
 
         return moveDir;

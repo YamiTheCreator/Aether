@@ -17,7 +17,8 @@ void main()
     // Нормализуем x к диапазону [0, 2π] для параметра t
     float t = aPosition.x + PI;  // Теперь t от 0 до 2π
     
-    // Искривляем прямую линию в круг
+    // Искривляем прямую линию в круг используя параметрическое уравнение
+    // x = r * cos(t), y = r * sin(t)
     float radius = 1.2;
     float x = radius * cos(t);
     float y = radius * sin(t);
