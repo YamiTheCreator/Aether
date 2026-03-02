@@ -92,9 +92,7 @@ public class BulletSystem : SystemBase
 
         Collider collider = new()
         {
-            Type = ColliderType.Bullet,
-            LocalVertices = bulletVertices,
-            Radius = 0.15f
+            LocalVertices = bulletVertices
         };
 
         Transform transform = new( spawnPosition )
@@ -141,8 +139,21 @@ public class BulletSystem : SystemBase
     private static Mesh CreateBulletMesh( GL gl )
     {
         const int segments = 8;
+        const float radius = 0.15f;
+
+        Vertex[] vertices = CreateCircleVertices( segments, radius );
+        uint[] indices = CreateTriangleFanIndices( segments );
+
+        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices, indices );
+        mesh.Topology = PrimitiveType.Triangles;
+        mesh.Material = CreateWhiteMaterial();
+
+        return mesh;
+    }
+
+    private static Vertex[] CreateCircleVertices( int segments, float radius )
+    {
         List<Vertex> vertices = [ ];
-        List<uint> indices = [ ];
 
         vertices.Add( new Vertex(
             Vector3D<float>.Zero,
@@ -155,8 +166,8 @@ public class BulletSystem : SystemBase
         for ( int i = 0; i <= segments; i++ )
         {
             float angle = ( float )i / segments * MathF.PI * 2;
-            float x = MathF.Cos( angle ) * 0.15f;
-            float y = MathF.Sin( angle ) * 0.15f;
+            float x = MathF.Cos( angle ) * radius;
+            float y = MathF.Sin( angle ) * radius;
 
             vertices.Add( new Vertex(
                 new Vector3D<float>( x, y, 0f ),
@@ -167,6 +178,13 @@ public class BulletSystem : SystemBase
             ) );
         }
 
+        return vertices.ToArray();
+    }
+
+    private static uint[] CreateTriangleFanIndices( int segments )
+    {
+        List<uint> indices = [ ];
+
         for ( uint i = 1; i <= segments; i++ )
         {
             indices.Add( 0 );
@@ -174,15 +192,14 @@ public class BulletSystem : SystemBase
             indices.Add( i + 1 );
         }
 
-        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices.ToArray(), indices.ToArray() );
-        mesh.Topology = PrimitiveType.Triangles;
+        return indices.ToArray();
+    }
 
-        Material material = new()
+    private static Material CreateWhiteMaterial()
+    {
+        return new Material
         {
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f )
         };
-        mesh.Material = material;
-
-        return mesh;
     }
 }

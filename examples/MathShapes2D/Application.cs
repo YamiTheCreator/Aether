@@ -60,7 +60,6 @@ public class Application() : ApplicationBase(
         World.AddSystem( materialSystem );
 
         World.AddSystem( new CameraMovementSystem() );
-        World.AddSystem( new CardioidPolarSystem() );
         World.AddSystem( new CircleSystem() );
         World.AddSystem( new StarSystem() );
         World.AddSystem( new GeometryCircleSystem() );
@@ -74,29 +73,9 @@ public class Application() : ApplicationBase(
             aspectRatio: ( float )WindowBase.LogicalWidth / WindowBase.LogicalHeight
         );
 
-        CreateCardioidPolarScene();
         CreateCircleScene();
         CreateStarScene();
         CreateGeometryCircleScene();
-    }
-
-    private void CreateCardioidPolarScene()
-    {
-        Entity entity = World.Spawn();
-
-        World.Add( entity, new Transform
-        {
-            Position = new Vector3D<float>( 0f, 0f, 0f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
-
-        World.Add( entity, new CardioidPolar
-        {
-            Scale = 2f,
-            Segments = 50,
-            IsGenerated = false
-        } );
     }
 
     private void CreateCircleScene()
@@ -105,7 +84,7 @@ public class Application() : ApplicationBase(
 
         World.Add( entity, new Transform
         {
-            Position = new Vector3D<float>( 8f, 0f, 0f ),
+            Position = new Vector3D<float>( 0f, 0f, 0f ),
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );
@@ -134,7 +113,7 @@ public class Application() : ApplicationBase(
 
         World.Add( entity, new Transform
         {
-            Position = new Vector3D<float>( 16f, 0f, 0f ),
+            Position = new Vector3D<float>( 8f, 0f, 0f ),
             Rotation = Quaternion<float>.Identity,
             Scale = new Vector3D<float>( 3f, 3f, 1f )
         } );
@@ -164,7 +143,7 @@ public class Application() : ApplicationBase(
 
         World.Add( entity, new Transform
         {
-            Position = new Vector3D<float>( 24f, 0f, 0f ),
+            Position = new Vector3D<float>( 16f, 0f, 0f ),
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );

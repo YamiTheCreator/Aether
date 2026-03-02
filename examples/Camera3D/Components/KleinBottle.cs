@@ -6,6 +6,5 @@ public struct KleinBottle : Component
 {
     public int USegments;
     public int VSegments;
-    public float Scale;
     public bool IsGenerated;
 }

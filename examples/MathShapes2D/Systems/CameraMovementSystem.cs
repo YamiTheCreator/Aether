@@ -11,7 +11,7 @@ public class CameraMovementSystem : SystemBase
     private InputSystem? _inputSystem;
     private Input? _input;
     private int _currentPlane;
-    private const int _totalPlanes = 4;
+    private const int _totalPlanes = 3;
     private const float _planeSpacing = 8f;
     private bool _wasAPressed;
     private bool _wasDPressed;
@@ -27,7 +27,12 @@ public class CameraMovementSystem : SystemBase
         if ( _inputSystem is null || _input is null )
             return;
 
-        bool isAPressed = _inputSystem.IsKeyDown( _input, Key.A );
+        HandlePlaneSwitch();
+    }
+
+    private void HandlePlaneSwitch()
+    {
+        bool isAPressed = _inputSystem!.IsKeyDown( _input!, Key.A );
         bool isDPressed = _inputSystem.IsKeyDown( _input, Key.D );
 
         if ( isAPressed && !_wasAPressed && _currentPlane > 0 )
@@ -55,13 +60,10 @@ public class CameraMovementSystem : SystemBase
 
     private void UpdateCameraPosition()
     {
-        foreach ( Entity entity in World.Filter<Transform>() )
+        foreach ( Entity entity in World.Filter<Camera, Transform>() )
         {
             ref Transform transform = ref World.Get<Transform>( entity );
-
-            float targetX = _currentPlane * _planeSpacing;
-
-            transform.Position = new Vector3D<float>( targetX, 0f, 5f );
+            transform.Position = new Vector3D<float>( _currentPlane * _planeSpacing, 0f, 5f );
         }
     }
 }

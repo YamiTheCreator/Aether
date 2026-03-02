@@ -171,8 +171,10 @@ public class Application() : ApplicationBase(
         World.AddSystem( new MazePlayerController() );
         World.AddSystem( new LightingSystem() );
         World.AddSystem( materialSystem );
-        World.AddSystem( new MazeSystem( CreateMazeLayout() ) );
+        World.AddSystem( new MazeSystem() );
         World.AddSystem( meshSystem );
+
+        CreateMazeGrid();
 
         Vector3D<float> startPosition = new( 1.5f, 0.5f, 1.5f );
         
@@ -187,6 +189,19 @@ public class Application() : ApplicationBase(
 
         CreateLights();
         CreateSky();
+    }
+
+    private void CreateMazeGrid()
+    {
+        int[,] layout = CreateMazeLayout();
+        
+        Entity gridEntity = World.Spawn();
+        World.Add( gridEntity, new Grid
+        {
+            Layout = layout,
+            Width = layout.GetLength( 1 ),
+            Height = layout.GetLength( 0 )
+        } );
     }
 
     private int[,] CreateMazeLayout()
@@ -214,53 +229,23 @@ public class Application() : ApplicationBase(
     private void CreateLights()
     {
         LightingSystem lightingSystem = World.GetSystem<LightingSystem>()!;
-        Entity light1 = World.Spawn();
-        World.Add( light1, new Transform
+
+        CreateLight( lightingSystem, new Vector3D<float>( 1f, 10f, 1f ), new Vector3D<float>( 1.0f, 0.0f, 0.0f ) );
+        CreateLight( lightingSystem, new Vector3D<float>( 14f, 10f, 1f ), new Vector3D<float>( 0.0f, 1.0f, 0.0f ) );
+        CreateLight( lightingSystem, new Vector3D<float>( 1f, 10f, 14f ), new Vector3D<float>( 0.0f, 0.0f, 1.0f ) );
+        CreateLight( lightingSystem, new Vector3D<float>( 14f, 10f, 14f ), new Vector3D<float>( 1.0f, 1.0f, 0.0f ) );
+    }
+
+    private void CreateLight( LightingSystem lightingSystem, Vector3D<float> position, Vector3D<float> color )
+    {
+        Entity light = World.Spawn();
+        World.Add( light, new Transform
         {
-            Position = new Vector3D<float>( 1f, 10f, 1f ),
+            Position = position,
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );
-        World.Add( light1, lightingSystem.CreatePoint(
-            new Vector3D<float>( 1.0f, 0.0f, 0.0f ),
-            intensity: 100.0f
-        ) );
-        
-        Entity light2 = World.Spawn();
-        World.Add( light2, new Transform
-        {
-            Position = new Vector3D<float>( 14f, 10f, 1f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
-        World.Add( light2, lightingSystem.CreatePoint(
-            new Vector3D<float>( 0.0f, 1.0f, 0.0f ),
-            intensity: 100.0f
-        ) );
-        
-        Entity light3 = World.Spawn();
-        World.Add( light3, new Transform
-        {
-            Position = new Vector3D<float>( 1f, 10f, 14f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
-        World.Add( light3, lightingSystem.CreatePoint(
-            new Vector3D<float>( 0.0f, 0.0f, 1.0f ),
-            intensity: 100.0f
-        ) );
-        
-        Entity light4 = World.Spawn();
-        World.Add( light4, new Transform
-        {
-            Position = new Vector3D<float>( 14f, 10f, 14f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
-        World.Add( light4, lightingSystem.CreatePoint(
-            new Vector3D<float>( 1.0f, 1.0f, 0.0f ),
-            intensity: 100.0f
-        ) );
+        World.Add( light, lightingSystem.CreatePoint( color, intensity: 100.0f ) );
     }
 
     private void CreateSky()
@@ -269,14 +254,18 @@ public class Application() : ApplicationBase(
         MaterialSystem materialSystem = World.GetGlobal<MaterialSystem>();
         Materials materials = World.GetGlobal<Materials>();
 
+        (List<Vertex> vertices, List<uint> indices) = CreateSphereGeometry();
+        CreateSkyEntity( meshSystem, materialSystem, materials, vertices, indices );
+    }
+
+    private (List<Vertex>, List<uint>) CreateSphereGeometry()
+    {
         List<Vertex> vertices = [ ];
         List<uint> indices = [ ];
 
-        Vector3D<float> center = new( 7.5f, 0.5f, 7.5f );
         float radius = 50.0f;
         int segments = 32;
         int rings = 16;
-
         Vector4D<float> white = new( 1, 1, 1, 1 );
 
         for ( int ring = 0; ring <= rings; ring++ )
@@ -318,6 +307,14 @@ public class Application() : ApplicationBase(
             }
         }
 
+        return (vertices, indices);
+    }
+
+    private void CreateSkyEntity( MeshSystem meshSystem, MaterialSystem materialSystem, Materials materials,
+        List<Vertex> vertices, List<uint> indices )
+    {
+        Vector3D<float> center = new( 7.5f, 0.5f, 7.5f );
+
         Entity skyEntity = World.Spawn();
         World.Add( skyEntity, new Transform
         {
@@ -326,10 +323,7 @@ public class Application() : ApplicationBase(
             Scale = Vector3D<float>.One
         } );
 
-        Material skyMaterial = materialSystem.CreateEmissive(
-            materials.SkyTexture,
-            3.0f
-        );
+        Material skyMaterial = materialSystem.CreateEmissive( materials.SkyTexture, 3.0f );
         World.Add( skyEntity, meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), skyMaterial ) );
     }
 }

@@ -10,10 +10,12 @@ public class GameState
     
     public Entity? FirstRevealedCard = null;
     public Entity? SecondRevealedCard = null;
+    public Entity? ClickedCard = null;
     
     public int MatchedPairs = 0;
     public int Moves = 0;
 
     public float DelayTimer = 0f;
     public bool IsWaitingForFlipBack = false;
+    public bool RestartRequested = false;
 }

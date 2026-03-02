@@ -13,13 +13,13 @@ public class SpaceshipSystem : SystemBase
 {
     private GL? _gl;
     private InputSystem? _inputSystem;
-    private Graphics.Components.Input? _input;
+    private Input? _input;
 
     protected override void OnCreate()
     {
         _gl = World.GetGlobal<GL>();
         _inputSystem = World.GetGlobal<InputSystem>();
-        _input = World.GetGlobal<Graphics.Components.Input>();
+        _input = World.GetGlobal<Input>();
     }
 
     protected override void OnUpdate( float deltaTime )
@@ -175,7 +175,19 @@ public class SpaceshipSystem : SystemBase
 
     private static Mesh CreateSpaceshipMesh( GL gl )
     {
-        Vertex[] vertices =
+        Vertex[] vertices = CreateSpaceshipVertices();
+        uint[] indices = CreateSpaceshipIndices();
+
+        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices, indices );
+        mesh.Topology = PrimitiveType.LineStrip;
+        mesh.Material = CreateWhiteMaterial();
+
+        return mesh;
+    }
+
+    private static Vertex[] CreateSpaceshipVertices()
+    {
+        return
         [
             new( new Vector3D<float>( 0.5f, 0f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ ),
@@ -186,18 +198,18 @@ public class SpaceshipSystem : SystemBase
             new( new Vector3D<float>( -0.3f, -0.3f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ )
         ];
+    }
 
-        uint[] indices = [ 0, 1, 2, 3, 0 ];
+    private static uint[] CreateSpaceshipIndices()
+    {
+        return [ 0, 1, 2, 3, 0 ];
+    }
 
-        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices, indices );
-        mesh.Topology = PrimitiveType.LineStrip;
-
-        Material material = new()
+    private static Material CreateWhiteMaterial()
+    {
+        return new Material
         {
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f )
         };
-        mesh.Material = material;
-
-        return mesh;
     }
 }

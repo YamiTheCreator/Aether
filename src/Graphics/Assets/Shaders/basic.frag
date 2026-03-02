@@ -7,7 +7,6 @@ in vec4 vColor;
 
 out vec4 FragColor;
 
-// Basic material
 uniform vec4 uColor;
 uniform sampler2D uTexture;
 uniform int uHasTexture;

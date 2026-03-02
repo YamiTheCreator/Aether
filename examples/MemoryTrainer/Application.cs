@@ -6,6 +6,7 @@ using Graphics.Systems;
 using Graphics.Structures;
 using MemoryTrainer.Systems;
 using MemoryTrainer.Components;
+using MemoryTrainer.Helpers;
 
 namespace MemoryTrainer;
 
@@ -55,9 +56,9 @@ public class Application() : ApplicationBase(
         World.AddSystem( new CameraSystem() );
         World.AddSystem( new LightingSystem() );
         World.AddSystem( materialSystem );
-        World.AddSystem( new CardFlipSystem() );
         World.AddSystem( new CardInputSystem() );
-        World.AddSystem( new CardRenderSystem() );
+        World.AddSystem( new GameManagerSystem() );
+        World.AddSystem( new CardSystem() );
         World.AddSystem( meshSystem );
 
         CreateCamera();
@@ -81,32 +82,38 @@ public class Application() : ApplicationBase(
     {
         LightingSystem lightingSystem = World.GetSystem<LightingSystem>()!;
 
-        Entity light1 = World.Spawn();
-        World.Add( light1, lightingSystem.CreatePointFull(
+        CreateLight( lightingSystem,
+            position: new Vector3D<float>( 0f, 10f, 5f ),
             ambientColor: new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
             diffuseColor: new Vector3D<float>( 1f, 1f, 1f ),
             specularColor: new Vector3D<float>( 1f, 1f, 1f ),
             intensity: 20f,
-            range: 50f
-        ) );
-        World.Add( light1, new Transform
-        {
-            Position = new Vector3D<float>( 0f, 10f, 5f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
+            range: 50f );
 
-        Entity light2 = World.Spawn();
-        World.Add( light2, lightingSystem.CreatePointFull(
+        CreateLight( lightingSystem,
+            position: new Vector3D<float>( -5f, 5f, 8f ),
             ambientColor: new Vector3D<float>( 0.2f, 0.2f, 0.2f ),
             diffuseColor: new Vector3D<float>( 0.8f, 0.8f, 1f ),
             specularColor: new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
             intensity: 3f,
-            range: 30f
+            range: 30f );
+    }
+
+    private void CreateLight( LightingSystem lightingSystem, Vector3D<float> position,
+        Vector3D<float> ambientColor, Vector3D<float> diffuseColor, Vector3D<float> specularColor,
+        float intensity, float range )
+    {
+        Entity light = World.Spawn();
+        World.Add( light, lightingSystem.CreatePointFull(
+            ambientColor: ambientColor,
+            diffuseColor: diffuseColor,
+            specularColor: specularColor,
+            intensity: intensity,
+            range: range
         ) );
-        World.Add( light2, new Transform
+        World.Add( light, new Transform
         {
-            Position = new Vector3D<float>( -5f, 5f, 8f ),
+            Position = position,
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );
@@ -116,12 +123,14 @@ public class Application() : ApplicationBase(
     {
         GameState gameState = World.GetGlobal<GameState>();
         MeshSystem meshSystem = World.GetGlobal<MeshSystem>();
+        TextureSystem textureSystem = World.GetGlobal<TextureSystem>();
 
-        int rows = gameState.GridRows;
-        int cols = gameState.GridCols;
-        int totalCards = rows * cols;
+        List<int> pairIds = GenerateShuffledPairs( gameState.GridRows * gameState.GridCols );
+        PlaceCards( pairIds, gameState.GridRows, gameState.GridCols, meshSystem, textureSystem );
+    }
 
-        // Создаем массив пар
+    private List<int> GenerateShuffledPairs( int totalCards )
+    {
         List<int> pairIds = [ ];
         for ( int i = 0; i < totalCards / 2; i++ )
         {
@@ -129,20 +138,26 @@ public class Application() : ApplicationBase(
             pairIds.Add( i );
         }
 
-        // Перемешиваем
+        ShufflePairs( pairIds );
+        return pairIds;
+    }
+
+    private void ShufflePairs( List<int> pairIds )
+    {
         Random random = new();
         for ( int i = pairIds.Count - 1; i > 0; i-- )
         {
             int j = random.Next( i + 1 );
             ( pairIds[ i ], pairIds[ j ] ) = ( pairIds[ j ], pairIds[ i ] );
         }
+    }
 
-        // Размеры карты и отступы (делаем карты квадратными и ближе друг к другу)
-        float cardSize = 0.9f; // Квадратные карты
-        float cardDepth = 0.05f; // Тонкие карты
-        float spacing = 1.0f; // Меньше расстояние между картами
+    private void PlaceCards( List<int> pairIds, int rows, int cols, MeshSystem meshSystem, TextureSystem textureSystem )
+    {
+        const float cardSize = 0.9f;
+        const float cardDepth = 0.05f;
+        const float spacing = 1.0f;
 
-        // Центрируем поле
         float startX = -( cols - 1 ) * spacing / 2f;
         float startZ = -( rows - 1 ) * spacing / 2f;
 
@@ -152,7 +167,7 @@ public class Application() : ApplicationBase(
             for ( int col = 0; col < cols; col++ )
             {
                 int pairId = pairIds[ cardIndex ];
-                int textureIndex = pairId % 8; // 8 текстур
+                int textureIndex = pairId % 8;
 
                 Vector3D<float> position = new(
                     startX + col * spacing,
@@ -160,136 +175,14 @@ public class Application() : ApplicationBase(
                     startZ + row * spacing
                 );
 
-                CreateCard( cardIndex, pairId, textureIndex,
-                    position, cardSize, cardSize, cardDepth, meshSystem );
+                CardFactory.CreateCard( World, cardIndex, pairId, textureIndex,
+                    position, cardSize, cardSize, cardDepth, meshSystem, textureSystem );
 
                 cardIndex++;
             }
         }
     }
 
-    private void CreateCard( int cardId, int pairId, int textureIndex,
-        Vector3D<float> position, float width, float height, float depth,
-        MeshSystem meshSystem )
-    {
-        Entity entity = World.Spawn();
 
-        // Добавляем компонент карты
-        World.Add( entity, new Card
-        {
-            CardId = cardId,
-            PairId = pairId,
-            TextureIndex = textureIndex,
-            IsRevealed = false,
-            IsMatched = false,
-            IsFlipping = false,
-            FlipProgress = 0f,
-            FlipSpeed = 3f,
-            FlipToFront = false
-        } );
 
-        // Добавляем трансформ (поворачиваем карту на 90 градусов вокруг X, чтобы она лежала)
-        World.Add( entity, new Transform
-        {
-            Position = position,
-            Rotation = Quaternion<float>.CreateFromAxisAngle(
-                new Vector3D<float>( 1f, 0f, 0f ),
-                90f * MathF.PI / 180f
-            ),
-            Scale = Vector3D<float>.One
-        } );
-
-        // Создаем меш карты (простой куб)
-        Mesh cardMesh = CreateCardMesh( width, height, depth, meshSystem );
-        World.Add( entity, cardMesh );
-
-        // Создаем материал (будет обновляться в CardRenderSystem)
-        TextureSystem textureSystem = World.GetGlobal<TextureSystem>();
-        Texture2D tempTexture = textureSystem.CreateTextureFromColor( 1, 1, 50, 100, 200 );
-
-        Material material = new()
-        {
-            Texture = tempTexture,
-            DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
-            AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
-            SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
-            Shininess = 32f,
-            Alpha = 1f
-        };
-        World.Add( entity, material );
-    }
-
-    private Mesh CreateCardMesh( float width, float height, float depth, MeshSystem meshSystem )
-    {
-        float hw = width / 2f;
-        float hh = height / 2f;
-        float hd = depth / 2f;
-
-        // Создаем вершины для куба
-        List<Vertex> vertices = [ ];
-        List<uint> indices = [ ];
-
-        Vector4D<float> white = new( 1f, 1f, 1f, 1f );
-
-        // Передняя грань (лицевая сторона)
-        AddQuad( vertices, indices,
-            new Vector3D<float>( -hw, -hh, hd ), new Vector3D<float>( hw, -hh, hd ),
-            new Vector3D<float>( hw, hh, hd ), new Vector3D<float>( -hw, hh, hd ),
-            new Vector3D<float>( 0f, 0f, 1f ), white );
-
-        // Задняя грань (обратная сторона)
-        AddQuad( vertices, indices,
-            new Vector3D<float>( hw, -hh, -hd ), new Vector3D<float>( -hw, -hh, -hd ),
-            new Vector3D<float>( -hw, hh, -hd ), new Vector3D<float>( hw, hh, -hd ),
-            new Vector3D<float>( 0f, 0f, -1f ), white );
-
-        // Верхняя грань
-        AddQuad( vertices, indices,
-            new Vector3D<float>( -hw, hh, hd ), new Vector3D<float>( hw, hh, hd ),
-            new Vector3D<float>( hw, hh, -hd ), new Vector3D<float>( -hw, hh, -hd ),
-            new Vector3D<float>( 0f, 1f, 0f ), white );
-
-        // Нижняя грань
-        AddQuad( vertices, indices,
-            new Vector3D<float>( -hw, -hh, -hd ), new Vector3D<float>( hw, -hh, -hd ),
-            new Vector3D<float>( hw, -hh, hd ), new Vector3D<float>( -hw, -hh, hd ),
-            new Vector3D<float>( 0f, -1f, 0f ), white );
-
-        // Правая грань
-        AddQuad( vertices, indices,
-            new Vector3D<float>( hw, -hh, hd ), new Vector3D<float>( hw, -hh, -hd ),
-            new Vector3D<float>( hw, hh, -hd ), new Vector3D<float>( hw, hh, hd ),
-            new Vector3D<float>( 1f, 0f, 0f ), white );
-
-        // Левая грань
-        AddQuad( vertices, indices,
-            new Vector3D<float>( -hw, -hh, -hd ), new Vector3D<float>( -hw, -hh, hd ),
-            new Vector3D<float>( -hw, hh, hd ), new Vector3D<float>( -hw, hh, -hd ),
-            new Vector3D<float>( -1f, 0f, 0f ), white );
-
-        Mesh mesh = meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray() );
-        return mesh;
-    }
-
-    private void AddQuad( List<Vertex> vertices, List<uint> indices,
-        Vector3D<float> v0, Vector3D<float> v1, Vector3D<float> v2, Vector3D<float> v3,
-        Vector3D<float> normal, Vector4D<float> color )
-    {
-        uint baseIndex = ( uint )vertices.Count;
-
-        vertices.Add( new Vertex( v0, new Vector2D<float>( 0f, 1f ), color, 0, normal ) );
-        vertices.Add( new Vertex( v1, new Vector2D<float>( 1f, 1f ), color, 0, normal ) );
-        vertices.Add( new Vertex( v2, new Vector2D<float>( 1f, 0f ), color, 0, normal ) );
-        vertices.Add( new Vertex( v3, new Vector2D<float>( 0f, 0f ), color, 0, normal ) );
-
-        // Первый треугольник
-        indices.Add( baseIndex );
-        indices.Add( baseIndex + 1 );
-        indices.Add( baseIndex + 2 );
-
-        // Второй треугольник
-        indices.Add( baseIndex );
-        indices.Add( baseIndex + 2 );
-        indices.Add( baseIndex + 3 );
-    }
 }

@@ -25,23 +25,32 @@ public class RippleSystem : SystemBase
         {
             ref Components.Ripple ripple = ref World.Get<Components.Ripple>( entity );
 
-            if ( _inputSystem.IsKeyPressed( _input, Key.R ) )
-            {
-                ripple.Time = 0f;
-                ripple.IsPlaying = true;
-                ripple.IsForward = !ripple.IsForward;
-            }
+            HandleInput( ref ripple );
+            UpdateRippleTime( ref ripple, deltaTime );
+        }
+    }
 
-            if ( ripple.IsPlaying )
-            {
-                ripple.Time += deltaTime;
+    private void HandleInput( ref Components.Ripple ripple )
+    {
+        if ( _inputSystem!.IsKeyPressed( _input!, Key.R ) )
+        {
+            ripple.Time = 0f;
+            ripple.IsPlaying = true;
+            ripple.IsForward = !ripple.IsForward;
+        }
+    }
 
-                if ( ripple.Time >= ripple.Duration )
-                {
-                    ripple.Time = ripple.Duration;
-                    ripple.IsPlaying = false;
-                }
-            }
+    private void UpdateRippleTime( ref Components.Ripple ripple, float deltaTime )
+    {
+        if ( !ripple.IsPlaying )
+            return;
+
+        ripple.Time += deltaTime;
+
+        if ( ripple.Time >= ripple.Duration )
+        {
+            ripple.Time = ripple.Duration;
+            ripple.IsPlaying = false;
         }
     }
 

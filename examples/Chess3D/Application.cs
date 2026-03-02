@@ -1,6 +1,6 @@
 using Silk.NET.Maths;
 using Aether.Core;
-using Aether.Core.Enums;
+using Chess3D.Systems;
 using Graphics;
 using Graphics.Components;
 using Graphics.Systems;
@@ -45,11 +45,11 @@ public class Application() : ApplicationBase(
         World.AddSystem( shaderSystem );
         World.AddSystem( inputSystem );
         World.AddSystem( new CameraSystem() );
+        World.AddSystem( new FreeCameraController() );
         World.AddSystem( new LightingSystem() );
         World.AddSystem( materialSystem );
         World.AddSystem( meshSystem );
-
-        // Создаем перспективную камеру
+        
         CameraSystem.CreatePerspectiveCamera(
             World,
             position: new Vector3D<float>( 0f, 0f, 5f ),

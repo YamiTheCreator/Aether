@@ -30,134 +30,141 @@ public class KleinBottleSystem : SystemBase
                 continue;
 
             ref KleinBottle bottle = ref World.Get<KleinBottle>( entity );
+            ref Transform transform = ref World.Get<Transform>( entity );
 
             if ( bottle.IsGenerated )
                 continue;
 
-            GenerateBottleMesh( entity, ref bottle, _meshSystem, _materialSystem );
+            GenerateBottleMesh( entity, ref bottle, ref transform, _meshSystem, _materialSystem );
             bottle.IsGenerated = true;
         }
     }
 
     protected override void OnDestroy() { }
 
-    private void GenerateBottleMesh( Entity entity, ref KleinBottle bottle, MeshSystem meshSystem,
-        MaterialSystem materialSystem )
+    private void GenerateBottleMesh( Entity entity, ref KleinBottle bottle, ref Transform transform,
+        MeshSystem meshSystem, MaterialSystem materialSystem )
     {
-        List<Vertex> vertices = [ ];
-        List<uint> indices = [ ];
+        float scale = transform.Scale.X;
+        (float minY, float maxY) = CalculateYBounds( bottle, scale );
+        List<Vertex> vertices = GenerateVertices( bottle, scale, minY, maxY );
+        List<uint> indices = GenerateIndices( bottle );
 
+        AddMeshToEntity( entity, vertices, indices, meshSystem, materialSystem );
+    }
+
+    private (float minY, float maxY) CalculateYBounds( KleinBottle bottle, float scale )
+    {
         float minY = float.MaxValue;
         float maxY = float.MinValue;
 
-        // Вычисляем min/max Y для маппинга цвета
         for ( int i = 0; i <= bottle.USegments; i++ )
         {
-            float u = ( float )i / bottle.USegments * MathF.PI * 2f;
             for ( int j = 0; j <= bottle.VSegments; j++ )
             {
                 float v = ( float )j / bottle.VSegments * MathF.PI * 2f;
-                float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
-                float y = 16f * MathF.Sin( v ) * bottle.Scale * 0.1f;
+                float y = 16f * MathF.Sin( v ) * scale * 0.1f;
                 minY = MathF.Min( minY, y );
                 maxY = MathF.Max( maxY, y );
             }
         }
 
-        // Вычисляем координаты
+        return (minY, maxY);
+    }
+
+    private List<Vertex> GenerateVertices( KleinBottle bottle, float scale, float minY, float maxY )
+    {
+        List<Vertex> vertices = [ ];
+
         for ( int i = 0; i <= bottle.USegments; i++ )
         {
             float u = ( float )i / bottle.USegments * MathF.PI * 2f;
             for ( int j = 0; j <= bottle.VSegments; j++ )
             {
                 float v = ( float )j / bottle.VSegments * MathF.PI * 2f;
-                float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
-                float x, y, z;
+                
+                Vector3D<float> position = CalculateKleinBottlePosition( u, v, scale );
+                Vector3D<float> normal = CalculateKleinBottleNormal( u, v, scale );
+                Vector4D<float> color = CalculateVertexColor( position.Y, minY, maxY );
+                Vector2D<float> uv = new( ( float )i / bottle.USegments, ( float )j / bottle.VSegments );
 
-                if ( v < MathF.PI )
-                {
-                    x = 6f * MathF.Cos( v ) * ( 1f + MathF.Sin( v ) ) + r * MathF.Cos( v ) * MathF.Cos( u );
-                    y = 16f * MathF.Sin( v );
-                    z = r * MathF.Sin( u );
-                }
-                else
-                {
-                    x = 6f * MathF.Cos( v ) * ( 1f + MathF.Sin( v ) ) + r * MathF.Cos( u + MathF.PI );
-                    y = 16f * MathF.Sin( v );
-                    z = r * MathF.Sin( u );
-                }
-
-                x *= bottle.Scale * 0.1f;
-                y *= bottle.Scale * 0.1f;
-                z *= bottle.Scale * 0.1f;
-
-                Vector3D<float> pos = new( x, -y, z );
-
-                // Вычисление нормалей численным методом
-                const float dv = 0.01f;
-
-                // Касательный вектор по v
-                float r1 = 4f * ( 1f - MathF.Cos( v + dv ) / 2f );
-                float x1, y1, z1;
-
-                if ( v + dv < MathF.PI )
-                {
-                    x1 = 6f * MathF.Cos( v + dv ) * ( 1f + MathF.Sin( v + dv ) ) +
-                         r1 * MathF.Cos( v + dv ) * MathF.Cos( u );
-                    y1 = 16f * MathF.Sin( v + dv );
-                    z1 = r1 * MathF.Sin( u );
-                }
-                else
-                {
-                    x1 = 6f * MathF.Cos( v + dv ) * ( 1f + MathF.Sin( v + dv ) ) + r1 * MathF.Cos( u + MathF.PI );
-                    y1 = 16f * MathF.Sin( v + dv );
-                    z1 = r1 * MathF.Sin( u );
-                }
-
-                x1 *= bottle.Scale * 0.1f;
-                y1 *= bottle.Scale * 0.1f;
-                z1 *= bottle.Scale * 0.1f;
-
-                // Касательный вектор по u
-                float x2, y2, z2;
-
-                if ( v < MathF.PI )
-                {
-                    x2 = -r * MathF.Cos( v ) * MathF.Sin( u );
-                    y2 = 0f;
-                    z2 = r * MathF.Cos( u );
-                }
-                else
-                {
-                    x2 = -r * MathF.Sin( u + MathF.PI );
-                    y2 = 0f;
-                    z2 = r * MathF.Cos( u );
-                }
-
-                x2 *= bottle.Scale * 0.1f;
-                y2 *= bottle.Scale * 0.1f;
-                z2 *= bottle.Scale * 0.1f;
-
-                Vector3D<float> tangentV = new( x1 - x, -( y1 - y ), z1 - z );
-                Vector3D<float> tangentU = new( x2, -y2, z2 );
-                Vector3D<float> normal = Vector3D.Normalize( Vector3D.Cross( tangentU, tangentV ) );
-
-                // Цветовой градиент на основе Y координаты (более явный)
-                float t = ( y - minY ) / ( maxY - minY );
-                Vector4D<float> color = new(
-                    0.2f + t * 0.8f, // От темно-красного к яркому
-                    0.1f + t * 0.3f, // Немного зеленого
-                    1f - t * 0.7f, // От синего к фиолетовому
-                    1.0f // Полностью непрозрачный
-                );
-
-                vertices.Add( new Vertex( pos,
-                    new Vector2D<float>( ( float )i / bottle.USegments, ( float )j / bottle.VSegments ), color, 0,
-                    normal ) );
+                vertices.Add( new Vertex( position, uv, color, 0, normal ) );
             }
         }
 
-        // Создаем индексы
+        return vertices;
+    }
+
+    private Vector3D<float> CalculateKleinBottlePosition( float u, float v, float scale )
+    {
+        float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
+        float x, y, z;
+
+        if ( v < MathF.PI )
+        {
+            x = 6f * MathF.Cos( v ) * ( 1f + MathF.Sin( v ) ) + r * MathF.Cos( v ) * MathF.Cos( u );
+            y = 16f * MathF.Sin( v );
+            z = r * MathF.Sin( u );
+        }
+        else
+        {
+            x = 6f * MathF.Cos( v ) * ( 1f + MathF.Sin( v ) ) + r * MathF.Cos( u + MathF.PI );
+            y = 16f * MathF.Sin( v );
+            z = r * MathF.Sin( u );
+        }
+
+        return new Vector3D<float>( x * scale * 0.1f, -y * scale * 0.1f, z * scale * 0.1f );
+    }
+
+    private Vector3D<float> CalculateKleinBottleNormal( float u, float v, float scale )
+    {
+        const float dv = 0.01f;
+        
+        Vector3D<float> pos = CalculateKleinBottlePosition( u, v, scale );
+        Vector3D<float> posV = CalculateKleinBottlePosition( u, v + dv, scale );
+        
+        float r = 4f * ( 1f - MathF.Cos( v ) / 2f );
+        Vector3D<float> tangentU = CalculateTangentU( u, v, r, scale );
+        Vector3D<float> tangentV = posV - pos;
+
+        return Vector3D.Normalize( Vector3D.Cross( tangentU, tangentV ) );
+    }
+
+    private Vector3D<float> CalculateTangentU( float u, float v, float r, float scale )
+    {
+        float x2, y2, z2;
+
+        if ( v < MathF.PI )
+        {
+            x2 = -r * MathF.Cos( v ) * MathF.Sin( u );
+            y2 = 0f;
+            z2 = r * MathF.Cos( u );
+        }
+        else
+        {
+            x2 = -r * MathF.Sin( u + MathF.PI );
+            y2 = 0f;
+            z2 = r * MathF.Cos( u );
+        }
+
+        return new Vector3D<float>( x2 * scale * 0.1f, -y2 * scale * 0.1f, z2 * scale * 0.1f );
+    }
+
+    private Vector4D<float> CalculateVertexColor( float y, float minY, float maxY )
+    {
+        float t = ( y - minY ) / ( maxY - minY );
+        return new Vector4D<float>(
+            0.2f + t * 0.8f,
+            0.1f + t * 0.3f,
+            1f - t * 0.7f,
+            1.0f
+        );
+    }
+
+    private List<uint> GenerateIndices( KleinBottle bottle )
+    {
+        List<uint> indices = [ ];
+
         for ( int i = 0; i < bottle.USegments; i++ )
         {
             for ( int j = 0; j < bottle.VSegments; j++ )
@@ -177,11 +184,16 @@ public class KleinBottleSystem : SystemBase
             }
         }
 
-        // Добавляем меш и материал к сущности
+        return indices;
+    }
+
+    private void AddMeshToEntity( Entity entity, List<Vertex> vertices, List<uint> indices, 
+        MeshSystem meshSystem, MaterialSystem materialSystem )
+    {
         World.Add( entity, meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray() ) );
 
         Material material = materialSystem.CreateUnlit( new Vector3D<float>( 1, 1, 1 ) );
-        material.Alpha = 1.0f; // Полностью непрозрачный
+        material.Alpha = 1.0f;
         World.Add( entity, material );
     }
 }

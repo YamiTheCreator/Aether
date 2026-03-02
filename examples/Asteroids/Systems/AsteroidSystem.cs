@@ -31,7 +31,7 @@ public class AsteroidSystem : SystemBase
         {
             return; // Не обновляем астероиды если игра окончена
         }
-        
+
         int asteroidCount = 0;
         foreach ( Entity entity in World.Filter<Asteroid>() )
         {
@@ -44,7 +44,7 @@ public class AsteroidSystem : SystemBase
 
             WrapPosition( ref transform.Position );
         }
-        
+
         if ( asteroidCount == 0 && gameStateSystem != null && gameStateSystem.IsPlayerAlive() )
         {
             int newWaveCount = 5 + gameStateSystem.GetWaveNumber();
@@ -52,6 +52,7 @@ public class AsteroidSystem : SystemBase
             {
                 SpawnAsteroid( 3 );
             }
+
             gameStateSystem.NextWave();
         }
     }
@@ -60,11 +61,12 @@ public class AsteroidSystem : SystemBase
     {
         if ( _gl == null ) return;
 
-        foreach ( Entity entity in World.Filter<Asteroid>() )
+        foreach ( Entity entity in World.Filter<Asteroid, Collider>() )
         {
             if ( !World.Has<Mesh>( entity ) )
             {
-                Mesh mesh = CreateAsteroidMesh( _gl );
+                ref Collider collider = ref World.Get<Collider>( entity );
+                Mesh mesh = CreateAsteroidMesh( _gl, collider.LocalVertices );
                 World.Add( entity, mesh );
             }
         }
@@ -74,7 +76,7 @@ public class AsteroidSystem : SystemBase
 
     public void SpawnAsteroid( int size, Vector3D<float>? position = null )
     {
-        Vector3D<float> spawnPos = position ?? GetRandomEdgePosition();
+        Vector3D<float> spawnPos = position ?? GetRandomPosition();
         float scale = size switch
         {
             3 => 1.5f,
@@ -89,20 +91,16 @@ public class AsteroidSystem : SystemBase
         );
 
         int seed = _random.Next();
-        Vector2D<float>[] localVertices = CollisionHelper.CreateAsteroidVertices( seed );
+        Vector2D<float>[] localVertices = VerticesBuilder.CreateAsteroidVertices( seed );
 
         Asteroid asteroid = new()
         {
             Velocity = velocity,
-            LocalVertices = localVertices,
-            Seed = seed
         };
 
         Collider collider = new()
         {
-            Type = ColliderType.Asteroid,
-            LocalVertices = localVertices,
-            Radius = 0.6f
+            LocalVertices = localVertices
         };
 
         Transform transform = new( spawnPos )
@@ -119,13 +117,13 @@ public class AsteroidSystem : SystemBase
     public void SplitAsteroid( Entity asteroidEntity )
     {
         if ( !World.Has<Asteroid>( asteroidEntity ) ) return;
-        
+
         ref Transform transform = ref World.Get<Transform>( asteroidEntity );
         Vector3D<float> position = transform.Position;
         float currentScale = transform.Scale.X;
 
         World.Despawn( asteroidEntity );
-        
+
         int newSize = currentScale switch
         {
             >= 1.5f => 2,
@@ -142,7 +140,7 @@ public class AsteroidSystem : SystemBase
 
         GameStateSystem? gameStateSystem = World.GetSystem<GameStateSystem>();
         gameStateSystem?.AddScore( points );
-        
+
         if ( newSize > 0 )
         {
             for ( int i = 0; i < 2; i++ )
@@ -152,51 +150,62 @@ public class AsteroidSystem : SystemBase
         }
     }
 
-    private Vector3D<float> GetRandomEdgePosition()
+    private Vector3D<float> GetRandomPosition()
     {
-        const float worldWidth = 20f;
-        const float worldHeight = 15f;
-
+        WorldBounds bounds = GetWorldBounds();
         int edge = _random.Next( 4 );
         return edge switch
         {
-            0 => new Vector3D<float>( ( float )_random.NextDouble() * worldWidth - worldWidth / 2, worldHeight / 2, 0 ),
-            1 => new Vector3D<float>( ( float )_random.NextDouble() * worldWidth - worldWidth / 2, -worldHeight / 2,
-                0 ),
-            2 => new Vector3D<float>( worldWidth / 2, ( float )_random.NextDouble() * worldHeight - worldHeight / 2,
-                0 ),
-            _ => new Vector3D<float>( -worldWidth / 2, ( float )_random.NextDouble() * worldHeight - worldHeight / 2,
-                0 )
+            0 => new Vector3D<float>( ( float )_random.NextDouble() * bounds.Width - bounds.Width / 2,
+                bounds.Height / 2, 0 ),
+            1 => new Vector3D<float>( ( float )_random.NextDouble() * bounds.Width - bounds.Width / 2,
+                -bounds.Height / 2, 0 ),
+            2 => new Vector3D<float>( bounds.Width / 2,
+                ( float )_random.NextDouble() * bounds.Height - bounds.Height / 2, 0 ),
+            _ => new Vector3D<float>( -bounds.Width / 2,
+                ( float )_random.NextDouble() * bounds.Height - bounds.Height / 2, 0 )
         };
+    }
+
+    private WorldBounds GetWorldBounds()
+    {
+        foreach ( Entity entity in World.Filter<WorldBounds>() )
+        {
+            return World.Get<WorldBounds>( entity );
+        }
+
+        return WorldBounds.Default;
     }
 
     private void WrapPosition( ref Vector3D<float> position )
     {
-        const float worldWidth = 20f;
-        const float worldHeight = 15f;
-
-        if ( position.X > worldWidth / 2 ) position.X = -worldWidth / 2;
-        if ( position.X < -worldWidth / 2 ) position.X = worldWidth / 2;
-        if ( position.Y > worldHeight / 2 ) position.Y = -worldHeight / 2;
-        if ( position.Y < -worldHeight / 2 ) position.Y = worldHeight / 2;
+        WorldBounds bounds = GetWorldBounds();
+        if ( position.X > bounds.Width / 2 ) position.X = -bounds.Width / 2;
+        if ( position.X < -bounds.Width / 2 ) position.X = bounds.Width / 2;
+        if ( position.Y > bounds.Height / 2 ) position.Y = -bounds.Height / 2;
+        if ( position.Y < -bounds.Height / 2 ) position.Y = bounds.Height / 2;
     }
 
-    private static Mesh CreateAsteroidMesh( GL gl )
+    private static Mesh CreateAsteroidMesh( GL gl, Vector2D<float>[] localVertices )
     {
-        Random random = new();
-        int sides = 8;
-        Vertex[] vertices = new Vertex[ sides ];
+        Vertex[] vertices = ConvertToVertices( localVertices );
+        uint[] indices = CreateLineStripIndices( localVertices.Length );
 
-        for ( int i = 0; i < sides; i++ )
+        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices, indices );
+        mesh.Topology = PrimitiveType.LineStrip;
+        mesh.Material = CreateWhiteMaterial();
+
+        return mesh;
+    }
+
+    private static Vertex[] ConvertToVertices( Vector2D<float>[] localVertices )
+    {
+        Vertex[] vertices = new Vertex[ localVertices.Length ];
+
+        for ( int i = 0; i < localVertices.Length; i++ )
         {
-            float angle = ( float )i / sides * MathF.PI * 2;
-            float radius = 0.4f + ( float )random.NextDouble() * 0.2f;
-
-            float x = MathF.Cos( angle ) * radius;
-            float y = MathF.Sin( angle ) * radius;
-
             vertices[ i ] = new Vertex(
-                new Vector3D<float>( x, y, 0f ),
+                new Vector3D<float>( localVertices[ i ].X, localVertices[ i ].Y, 0f ),
                 Vector2D<float>.Zero,
                 new Vector4D<float>( 1, 1, 1, 1 ),
                 0,
@@ -204,23 +213,26 @@ public class AsteroidSystem : SystemBase
             );
         }
 
-        uint[] indices = new uint[ sides + 1 ];
-        for ( uint i = 0; i < sides; i++ )
+        return vertices;
+    }
+
+    private static uint[] CreateLineStripIndices( int vertexCount )
+    {
+        uint[] indices = new uint[ vertexCount + 1 ];
+        for ( uint i = 0; i < vertexCount; i++ )
         {
             indices[ i ] = i;
         }
+        indices[ vertexCount ] = 0;
 
-        indices[ sides ] = 0;
+        return indices;
+    }
 
-        Mesh mesh = MeshSystem.CreateMeshFromVertices( gl, vertices, indices );
-        mesh.Topology = PrimitiveType.LineStrip;
-
-        Material material = new()
+    private static Material CreateWhiteMaterial()
+    {
+        return new Material
         {
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f )
         };
-        mesh.Material = material;
-
-        return mesh;
     }
 }

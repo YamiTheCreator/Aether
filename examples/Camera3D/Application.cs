@@ -7,6 +7,7 @@ using Graphics.Systems;
 using Graphics.Structures;
 using Camera3D.Systems;
 using Camera3D.Components;
+using Chess3D.Systems;
 
 namespace Camera3D;
 
@@ -45,6 +46,7 @@ public class Application() : ApplicationBase(
         World.AddSystem( shaderSystem );
         World.AddSystem( inputSystem );
         World.AddSystem( new CameraSystem() );
+        World.AddSystem( new FreeCameraController() );
         World.AddSystem( new LightingSystem() );
         World.AddSystem( materialSystem );
 
@@ -53,7 +55,6 @@ public class Application() : ApplicationBase(
 
         World.AddSystem( meshSystem );
 
-        // Создаем перспективную камеру
         CameraSystem.CreatePerspectiveCamera(
             World,
             position: new Vector3D<float>( 0f, 0f, 5f ),
@@ -98,7 +99,6 @@ public class Application() : ApplicationBase(
         {
             USegments = 512,
             VSegments = 512,
-            Scale = 1.0f,
             IsGenerated = false
         } );
     }
@@ -107,28 +107,15 @@ public class Application() : ApplicationBase(
     {
         LightingSystem lightingSystem = World.GetSystem<LightingSystem>()!;
 
-        Entity light1 = World.Spawn();
-        World.Add( light1, lightingSystem.CreatePoint(
-            diffuseColor: new Vector3D<float>( 1.0f, 1.0f, 1.0f ),
-            intensity: 100.0f,
-            range: 50.0f
+        Entity light = World.Spawn();
+        World.Add( light, lightingSystem.CreatePoint(
+            diffuseColor: new Vector3D<float>( 1f, 1f, 1f ),
+            intensity: 1000f,
+            range: 50f
         ) );
-        World.Add( light1, new Transform
+        World.Add( light, new Transform
         {
-            Position = new Vector3D<float>( 0f, 5f, 5f ),
-            Rotation = Quaternion<float>.Identity,
-            Scale = Vector3D<float>.One
-        } );
-
-        Entity light2 = World.Spawn();
-        World.Add( light2, lightingSystem.CreatePoint(
-            diffuseColor: new Vector3D<float>( 0.8f, 0.8f, 1.0f ),
-            intensity: 100.0f,
-            range: 50.0f
-        ) );
-        World.Add( light2, new Transform
-        {
-            Position = new Vector3D<float>( -5f, 3f, 0f ),
+            Position = new Vector3D<float>( 3f, 15f, 0f ),
             Rotation = Quaternion<float>.Identity,
             Scale = Vector3D<float>.One
         } );
