@@ -1,6 +1,6 @@
 using Aether.Core;
+using Asteroids.Builders;
 using Asteroids.Components;
-using Asteroids.Helpers;
 using Graphics.Systems;
 using Silk.NET.Input;
 using Silk.NET.Maths;
@@ -189,7 +189,7 @@ public class GameStateSystem : SystemBase
 
         Collider collider = new()
         {
-            LocalVertices = VerticesBuilder.CreateSpaceshipVertices()
+            LocalVertices = EntityBuilder.CreateSpaceshipVertices()
         };
 
         Graphics.Components.Transform transform = new( Vector3D<float>.Zero )
@@ -215,7 +215,7 @@ public class GameStateSystem : SystemBase
         };
 
         Vector2D<float>[] spaceshipVertices = TransformSystem.GetTransformedPolygon(
-            VerticesBuilder.CreateSpaceshipVertices(),
+            EntityBuilder.CreateSpaceshipVertices(),
             spaceshipTransform
         );
 

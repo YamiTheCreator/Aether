@@ -1,6 +1,6 @@
 using Aether.Core;
+using Asteroids.Builders;
 using Asteroids.Components;
-using Asteroids.Helpers;
 using Graphics.Components;
 using Graphics.Structures;
 using Graphics.Systems;
@@ -91,7 +91,7 @@ public class AsteroidSystem : SystemBase
         );
 
         int seed = _random.Next();
-        Vector2D<float>[] localVertices = VerticesBuilder.CreateAsteroidVertices( seed );
+        Vector2D<float>[] localVertices = EntityBuilder.CreateAsteroidVertices( seed );
 
         Asteroid asteroid = new()
         {

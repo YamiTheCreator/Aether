@@ -39,19 +39,19 @@ public class Application() : ApplicationBase(
         World.SetGlobal( input );
 
         _circleShader = shaderSystem.CreateShader(
-            "examples/MathShapes2D/Shaders/circle.vert",
-            "examples/MathShapes2D/Shaders/circle.frag"
+            "examples/Shapes2D/Shaders/circle.vert",
+            "examples/Shapes2D/Shaders/circle.frag"
         );
 
         _flagShader = shaderSystem.CreateShader(
-            "examples/MathShapes2D/Shaders/flag.vert",
-            "examples/MathShapes2D/Shaders/flag.frag"
+            "examples/Shapes2D/Shaders/flag.vert",
+            "examples/Shapes2D/Shaders/flag.frag"
         );
 
         _geometryCircleShader = shaderSystem.CreateShader(
-            "examples/MathShapes2D/Shaders/geometry_circle.vert",
-            "examples/MathShapes2D/Shaders/geometry_circle.frag",
-            "examples/MathShapes2D/Shaders/geometry_circle.geom"
+            "examples/Shapes2D/Shaders/geometry_circle.vert",
+            "examples/Shapes2D/Shaders/geometry_circle.frag",
+            "examples/Shapes2D/Shaders/geometry_circle.geom"
         );
 
         World.AddSystem( shaderSystem );
@@ -74,7 +74,7 @@ public class Application() : ApplicationBase(
         );
 
         CreateCircleScene();
-        CreateStarScene();
+        CreateFlagScene();
         CreateGeometryCircleScene();
     }
 
@@ -107,7 +107,7 @@ public class Application() : ApplicationBase(
         } );
     }
 
-    private void CreateStarScene()
+    private void CreateFlagScene()
     {
         Entity entity = World.Spawn();
 

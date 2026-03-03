@@ -68,6 +68,7 @@ public static class CollisionSystem
         return pointA - pointB;
     }
 
+    //How to work Dot func
     // Для каждой точки берем скалярное произведение точки на направление,
     // у самой удаленной точки будет наибольшая проекция
     private static Vector2D<float> GetFarthestPointInDirection( Vector2D<float>[] shape, Vector2D<float> direction )

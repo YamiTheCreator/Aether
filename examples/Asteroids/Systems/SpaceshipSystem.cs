@@ -190,13 +190,13 @@ public class SpaceshipSystem : SystemBase
     {
         return
         [
-            new( new Vector3D<float>( 0.5f, 0f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
+            new Vertex( new Vector3D<float>( 0.5f, 0f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ ),
-            new( new Vector3D<float>( -0.3f, 0.3f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
+            new Vertex( new Vector3D<float>( -0.3f, 0.3f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ ),
-            new( new Vector3D<float>( -0.2f, 0f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
+            new Vertex( new Vector3D<float>( -0.2f, 0f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ ),
-            new( new Vector3D<float>( -0.3f, -0.3f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
+            new Vertex( new Vector3D<float>( -0.3f, -0.3f, 0f ), Vector2D<float>.Zero, new Vector4D<float>( 1, 1, 1, 1 ), 0,
                 Vector3D<float>.UnitZ )
         ];
     }

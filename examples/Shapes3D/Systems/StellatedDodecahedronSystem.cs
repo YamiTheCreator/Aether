@@ -219,7 +219,7 @@ public class StellatedDodecahedronSystem : SystemBase
 
         Material faceMaterial = new()
         {
-            Alpha = 0.9f,
+            Alpha = 0.4f,
             DiffuseColor = color,
             Metallic = 1f,
             Roughness = 0.3f

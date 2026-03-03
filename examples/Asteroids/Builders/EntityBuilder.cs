@@ -1,8 +1,8 @@
 using Silk.NET.Maths;
 
-namespace Asteroids.Helpers;
+namespace Asteroids.Builders;
 
-public static class VerticesBuilder
+public static class EntityBuilder
 {
     public static Vector2D<float>[] CreateAsteroidVertices( int seed )
     {

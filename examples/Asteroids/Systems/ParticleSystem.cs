@@ -41,7 +41,8 @@ public class ParticleSystem : SystemBase
             float alpha = particle.Lifetime / particle.MaxLifetime;
             particle.Color.W = alpha;
 
-            float scale = 0.08f + alpha * 0.15f;
+            // Размер частицы уменьшается со временем от 0.15 до 0.05
+            float scale = 0.05f + alpha * 0.10f;
             transform.Scale = new Vector3D<float>( scale, scale, 1f );
         }
 
@@ -78,7 +79,7 @@ public class ParticleSystem : SystemBase
 
     protected override void OnDestroy() { }
 
-    public void SpawnEngineParticles( Vector3D<float> position, float angle, int count = 3 )
+    public void SpawnEngineParticles( Vector3D<float> position, float angle, int count = 10 )
     {
         for ( int i = 0; i < count; i++ )
         {
@@ -93,14 +94,14 @@ public class ParticleSystem : SystemBase
             Particle particle = new()
             {
                 Velocity = velocity,
-                Lifetime = 0.2f + ( float )_random.NextDouble() * 0.15f,
+                Lifetime = 0.05f + ( float )_random.NextDouble() * 0.15f,
                 MaxLifetime = 0.35f,
-                Color = new Vector4D<float>( 1f, 0.7f, 0.3f, 1f )
+                Color = new Vector4D<float>( 1f, 0.2f, 0.1f, 1f )
             };
 
             Transform transform = new( position )
             {
-                Scale = new Vector3D<float>( 0.15f, 0.15f, 1f )
+                Scale = new Vector3D<float>( 0.08f, 0.08f, 1f )
             };
 
             Entity entity = World.Spawn( particle );
@@ -124,14 +125,14 @@ public class ParticleSystem : SystemBase
             Particle particle = new()
             {
                 Velocity = velocity,
-                Lifetime = 1f + ( float )_random.NextDouble() * 1f,
+                Lifetime = 0.5f + ( float )_random.NextDouble() * 1f,
                 MaxLifetime = 2f,
                 Color = color
             };
 
             Transform transform = new( position )
             {
-                Scale = new Vector3D<float>( 0.2f, 0.2f, 1f ),
+                Scale = new Vector3D<float>( 0.15f, 0.15f, 1f ),
                 Rotation = Quaternion<float>.CreateFromAxisAngle( Vector3D<float>.UnitZ,
                     ( float )_random.NextDouble() * MathF.PI * 2 )
             };

@@ -32,14 +32,14 @@ public class CircleSystem : SystemBase
             if ( circle.IsGenerated )
                 continue;
 
-            GenerateCardioid( entity, ref circle, _meshSystem );
+            GenerateCercle( entity, ref circle, _meshSystem );
             circle.IsGenerated = true;
         }
     }
 
     protected override void OnDestroy() { }
 
-    private void GenerateCardioid( Entity entity, ref Circle circle, MeshSystem meshSystem )
+    private void GenerateCercle( Entity entity, ref Circle circle, MeshSystem meshSystem )
     {
         List<Vertex> vertices = [ ];
         List<uint> indices = [ ];
