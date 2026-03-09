@@ -24,20 +24,20 @@ public class Application() : ApplicationBase(
 
         Texture2D whiteTexture = textureSystem.CreateTextureFromColor( 1, 1 );
 
-        string projectRoot = "/Users/yami/Documents/RiderProjects/Aether";
+        string projectRoot = "C:/Users/YamiT/RiderProjects/Aether";
         string texturesPath = $"{projectRoot}/src/Graphics/Assets/Textures";
 
-        Material brickMaterial = new()
+        Material metalMaterial = new()
         {
-            Texture = textureSystem.CreateTextureFromFile( $"{texturesPath}/alien-slime1-bl/alien-slime1-albedo.png" ),
+            Texture = textureSystem.CreateTextureFromFile( $"{texturesPath}/metal/albedo.png" ),
             NormalMap = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/alien-slime1-bl/alien-slime1-normal-ogl.png" ),
+                $"{texturesPath}/metal/normal-ogl.png" ),
             MetallicMap =
-                textureSystem.CreateTextureFromFile( $"{texturesPath}/alien-slime1-bl/alien-slime1-metallic.png" ),
+                textureSystem.CreateTextureFromFile( $"{texturesPath}/metal/metallic.png" ),
             RoughnessMap =
-                textureSystem.CreateTextureFromFile( $"{texturesPath}/alien-slime1-bl/alien-slime1-roughness.png" ),
+                textureSystem.CreateTextureFromFile( $"{texturesPath}/metal/roughness.png" ),
             AmbientOcclusionMap =
-                textureSystem.CreateTextureFromFile( $"{texturesPath}/alien-slime1-bl/alien-slime1-ao.png" ),
+                textureSystem.CreateTextureFromFile( $"{texturesPath}/metal/ao.png" ),
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
             AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
             SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
@@ -47,44 +47,21 @@ public class Application() : ApplicationBase(
             Alpha = 1f
         };
 
-        Material stoneMaterial = new()
-        {
-            Texture = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/cloudy-veined-quartz-bl/cloudy-veined-quartz_albedo.png" ),
-            NormalMap = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/cloudy-veined-quartz-bl/cloudy-veined-quartz_normal-ogl.png" ),
-            MetallicMap =
-                textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/cloudy-veined-quartz-bl/cloudy-veined-quartz_metallic.png" ),
-            RoughnessMap =
-                textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/cloudy-veined-quartz-bl/cloudy-veined-quartz_roughness.png" ),
-            AmbientOcclusionMap =
-                textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/cloudy-veined-quartz-bl/cloudy-veined-quartz_ao.png" ),
-            DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
-            AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
-            SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
-            Shininess = 32f,
-            Metallic = 0.0f,
-            Roughness = 0.5f,
-            Alpha = 1f
-        };
-
-        Material tileMaterial = new()
+        Material quartzMaterial = new()
         {
             Texture = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/dark-wood-stain-bl/dark-wood-stain_albedo.png" ),
+                $"{texturesPath}/quartz/albedo.png" ),
             NormalMap = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/dark-wood-stain-bl/dark-wood-stain_normal-ogl.png" ),
+                $"{texturesPath}/quartz/normal-ogl.png" ),
             MetallicMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/dark-wood-stain-bl/dark-wood-stain_metallic.png" ),
+                    $"{texturesPath}/quartz/metallic.png" ),
             RoughnessMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/dark-wood-stain-bl/dark-wood-stain_roughness.png" ),
+                    $"{texturesPath}/quartz/roughness.png" ),
             AmbientOcclusionMap =
-                textureSystem.CreateTextureFromFile( $"{texturesPath}/dark-wood-stain-bl/dark-wood-stain_ao.png" ),
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/quartz/ao.png" ),
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
             AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
             SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
@@ -94,21 +71,20 @@ public class Application() : ApplicationBase(
             Alpha = 1f
         };
 
-        Material sandstoneMaterial = new()
+        Material woodMaterial = new()
         {
             Texture = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/scratched-up-steel-bl/scratched-up-steel_albedo.png" ),
+                $"{texturesPath}/wood/albedo.png" ),
             NormalMap = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/scratched-up-steel-bl/scratched-up-steel_normal-ogl.png" ),
+                $"{texturesPath}/wood/normal-ogl.png" ),
             MetallicMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/scratched-up-steel-bl/scratched-up-steel_metallic.png" ),
+                    $"{texturesPath}/wood/metallic.png" ),
             RoughnessMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/scratched-up-steel-bl/scratched-up-steel_roughness.png" ),
+                    $"{texturesPath}/wood/roughness.png" ),
             AmbientOcclusionMap =
-                textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/scratched-up-steel-bl/scratched-up-steel_ao.png" ),
+                textureSystem.CreateTextureFromFile( $"{texturesPath}/wood/ao.png" ),
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
             AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
             SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
@@ -118,21 +94,21 @@ public class Application() : ApplicationBase(
             Alpha = 1f
         };
 
-        Material grassMaterial = new()
+        Material steelMaterial = new()
         {
             Texture = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/angled-blocks-vegetation-bl/angled-blocks-vegetation_albedo.png" ),
+                $"{texturesPath}/steel/albedo.png" ),
             NormalMap = textureSystem.CreateTextureFromFile(
-                $"{texturesPath}/angled-blocks-vegetation-bl/angled-blocks-vegetation_normal-ogl.png" ),
+                $"{texturesPath}/steel/normal-ogl.png" ),
             MetallicMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/angled-blocks-vegetation-bl/angled-blocks-vegetation_metallic.png" ),
+                    $"{texturesPath}/steel/metallic.png" ),
             RoughnessMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/angled-blocks-vegetation-bl/angled-blocks-vegetation_roughness.png" ),
+                    $"{texturesPath}/steel/roughness.png" ),
             AmbientOcclusionMap =
                 textureSystem.CreateTextureFromFile(
-                    $"{texturesPath}/angled-blocks-vegetation-bl/angled-blocks-vegetation_ao.png" ),
+                    $"{texturesPath}/steel/ao.png" ),
             DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
             AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
             SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
@@ -142,8 +118,80 @@ public class Application() : ApplicationBase(
             Alpha = 1f
         };
 
-        Texture2D skyTexture = textureSystem.CreateTextureFromFile(
-            $"{texturesPath}/seamless_8k_pbr_3d_texture_of_twilight_sky_with_sun_halo_and_soft_cirrus_clouds_blender_zip/seamless_8k_pbr_3d_texture_of_twilight_sky_with_sun_halo_and_soft_cirrus_clouds_free_download__BaseColor.png" );
+        Material oakTreeMaterial = new()
+        {
+            Texture = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/oak/albedo.png" ),
+            NormalMap = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/oak/normal-ogl.png" ),
+            MetallicMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/oak/metallic.png" ),
+            RoughnessMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/oak/roughness.png" ),
+            AmbientOcclusionMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/oak/ao.png" ),
+            DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
+            AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
+            SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
+            Shininess = 32f,
+            Metallic = 0.0f,
+            Roughness = 0.5f,
+            Alpha = 1f
+        };
+
+        Material rockMaterial = new()
+        {
+            Texture = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/rock/albedo.png" ),
+            NormalMap = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/rock/normal-ogl.png" ),
+            MetallicMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/rock/metallic.png" ),
+            RoughnessMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/rock/roughness.png" ),
+            AmbientOcclusionMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/rock/ao.png" ),
+            DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
+            AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
+            SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
+            Shininess = 32f,
+            Metallic = 0.0f,
+            Roughness = 0.5f,
+            Alpha = 1f
+        };
+
+        Material vegetationMaterial = new()
+        {
+            Texture = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/vegetation/albedo.png" ),
+            NormalMap = textureSystem.CreateTextureFromFile(
+                $"{texturesPath}/vegetation/normal-ogl.png" ),
+            MetallicMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/vegetation/metallic.png" ),
+            RoughnessMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/vegetation/roughness.png" ),
+            AmbientOcclusionMap =
+                textureSystem.CreateTextureFromFile(
+                    $"{texturesPath}/vegetation/ao.png" ),
+            DiffuseColor = new Vector3D<float>( 1f, 1f, 1f ),
+            AmbientColor = new Vector3D<float>( 0.3f, 0.3f, 0.3f ),
+            SpecularColor = new Vector3D<float>( 0.5f, 0.5f, 0.5f ),
+            Shininess = 32f,
+            Metallic = 0.0f,
+            Roughness = 0.5f,
+            Alpha = 1f
+        };
+
+        Texture2D twilightSky = textureSystem.CreateTextureFromFile(
+            $"{texturesPath}/sky/BaseColor.png" );
 
         Input input = inputSystem.CreateInput( WindowBase.Input );
 
@@ -157,12 +205,14 @@ public class Application() : ApplicationBase(
 
         World.SetGlobal( new Materials
         {
-            BrickMaterial = brickMaterial,
-            StoneMaterial = stoneMaterial,
-            TileMaterial = tileMaterial,
-            SandstoneMaterial = sandstoneMaterial,
-            GrassMaterial = grassMaterial,
-            SkyTexture = skyTexture
+            Metal = metalMaterial,
+            Stone = quartzMaterial,
+            Wood = woodMaterial,
+            Steel = steelMaterial,
+            Oak = oakTreeMaterial,
+            Rock = rockMaterial,
+            Grass = vegetationMaterial,
+            Sky = twilightSky
         } );
 
         World.AddSystem( shaderSystem );
@@ -323,7 +373,7 @@ public class Application() : ApplicationBase(
             Scale = Vector3D<float>.One
         } );
 
-        Material skyMaterial = materialSystem.CreateEmissive( materials.SkyTexture, 3.0f );
+        Material skyMaterial = materialSystem.CreateEmissive( materials.Sky, 3.0f );
         World.Add( skyEntity, meshSystem.CreateMesh( vertices.ToArray(), indices.ToArray(), skyMaterial ) );
     }
 }

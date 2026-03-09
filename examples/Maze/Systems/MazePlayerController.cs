@@ -3,7 +3,6 @@ using Silk.NET.Maths;
 using Aether.Core;
 using Graphics.Components;
 using Graphics.Systems;
-using Maze.Components;
 
 namespace Maze.Systems;
 
@@ -12,7 +11,6 @@ public class MazePlayerController : SystemBase
     private InputSystem? _inputSystem;
     private Vector2D<float> _lastMousePos;
     private bool _firstMouse = true;
-    private bool _cursorVisible;
     private float _yaw = -90f;
     private float _pitch;
     private const float _playerHeight = 0.5f;
@@ -42,27 +40,9 @@ public class MazePlayerController : SystemBase
         foreach ( Entity entity in World.Filter<Camera, Transform>() )
         {
             ref Transform transform = ref World.Get<Transform>( entity );
-
-            HandleCursorToggle( input );
-
-            if ( !_cursorVisible )
-            {
-                HandleMovement( ref transform, input, mazeSystem, deltaTime );
-                HandleMouseLook( ref transform, input );
-            }
-        }
-    }
-    
-    private void HandleCursorToggle( Input input )
-    {
-        bool shiftPressed = _inputSystem!.IsKeyDown( input, Key.ShiftLeft ) ||
-                           _inputSystem.IsKeyDown( input, Key.ShiftRight );
-
-        if ( shiftPressed != _cursorVisible )
-        {
-            _cursorVisible = shiftPressed;
-            input.Mouse.Cursor.CursorMode = _cursorVisible ? CursorMode.Normal : CursorMode.Disabled;
-            _firstMouse = true;
+            
+            HandleMovement( ref transform, input, mazeSystem, deltaTime );
+            HandleMouseLook( ref transform, input );
         }
     }
     

@@ -5,10 +5,12 @@ namespace Maze.Components;
 
 public struct Materials : Component
 {
-    public Material BrickMaterial;
-    public Material StoneMaterial;
-    public Material TileMaterial;
-    public Material SandstoneMaterial;
-    public Material GrassMaterial;
-    public Texture2D SkyTexture;
+    public Material Metal;
+    public Material Stone;
+    public Material Wood;
+    public Material Steel;
+    public Material Oak;
+    public Material Rock;
+    public Material Grass;
+    public Texture2D Sky;
 }

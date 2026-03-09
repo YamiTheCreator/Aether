@@ -48,7 +48,7 @@ public class CardSystem : SystemBase
         TextureSystem textureSystem = World.GetGlobal<TextureSystem>();
 
         _frontTextures = new Texture2D[ 8 ];
-        string projectRoot = "/Users/yami/Documents/RiderProjects/Aether";
+        const string projectRoot = "/Users/yami/Documents/RiderProjects/Aether";
 
         for ( int i = 0; i < 8; i++ )
         {

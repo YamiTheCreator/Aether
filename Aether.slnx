@@ -2,6 +2,7 @@
     <Folder Name="/examples/">
         <Project Path="examples/MemoryTrainer/MemoryTrainer.csproj" />
         <Project Path="examples/Ripple/Ripple.csproj" />
+        <Project Path="examples/Galaxian3D/Galaxian3D.csproj" />
         <Project Path="examples/Maze/Maze.csproj" />
         <Project Path="examples/Chess3D/Chess3D.csproj" />
         <Project Path="examples/Asteroids/Asteroids.csproj" />

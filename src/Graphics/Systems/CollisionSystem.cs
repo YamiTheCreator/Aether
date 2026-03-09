@@ -1,5 +1,3 @@
-using Aether.Core.Extensions;
-using Graphics.Components;
 using Silk.NET.Maths;
 
 namespace Graphics.Systems;
@@ -95,7 +93,7 @@ public static class CollisionSystem
     {
         if ( simplex.Count == 2 )
         {
-            return ProcessLine( simplex, ref direction );
+            return ProcessLine( simplex, direction: ref direction );
         }
 
         return ProcessTriangle( simplex, ref direction );
@@ -161,40 +159,5 @@ public static class CollisionSystem
         float ac = a.X * c.X + a.Y * c.Y;
         float bc = b.X * c.X + b.Y * c.Y;
         return new Vector2D<float>( b.X * ac - a.X * bc, b.Y * ac - a.Y * bc );
-    }
-
-    // AABB проверка коллизий для простых случаев в 2D через круг и тайлы
-    // Проверяем пересечение круга с сеткой тайлов, используя ближайшую точку на тайле
-    public static bool CheckCircleGridCollision<T>( T grid, float worldX, float worldZ, float radius,
-        Func<T, int, int, bool> isWallFunc, int gridWidth, int gridHeight )
-    {
-        int minX = ( int )Math.Floor( worldX - radius );
-        int maxX = ( int )Math.Ceiling( worldX + radius );
-        int minZ = ( int )Math.Floor( worldZ - radius );
-        int maxZ = ( int )Math.Ceiling( worldZ + radius );
-
-        for ( int x = minX; x <= maxX; x++ )
-        {
-            for ( int z = minZ; z <= maxZ; z++ )
-            {
-                if ( x < 0 || x >= gridWidth || z < 0 || z >= gridHeight )
-                    return true;
-
-                if ( isWallFunc( grid, x, z ) )
-                {
-                    float closestX = Math.Clamp( worldX, x, x + 1 );
-                    float closestZ = Math.Clamp( worldZ, z, z + 1 );
-
-                    float dx = worldX - closestX;
-                    float dz = worldZ - closestZ;
-                    float distSq = dx * dx + dz * dz;
-
-                    if ( distSq < radius * radius )
-                        return true;
-                }
-            }
-        }
-
-        return false;
-    }
+    }                                         
 }

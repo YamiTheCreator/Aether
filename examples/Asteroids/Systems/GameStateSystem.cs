@@ -1,6 +1,7 @@
 using Aether.Core;
 using Asteroids.Builders;
 using Asteroids.Components;
+using Graphics.Components;
 using Graphics.Systems;
 using Silk.NET.Input;
 using Silk.NET.Maths;
@@ -10,12 +11,12 @@ namespace Asteroids.Systems;
 public class GameStateSystem : SystemBase
 {
     private InputSystem? _inputSystem;
-    private Graphics.Components.Input? _input;
+    private Input? _input;
 
     protected override void OnCreate()
     {
         _inputSystem = World.GetGlobal<InputSystem>();
-        _input = World.GetGlobal<Graphics.Components.Input>();
+        _input = World.GetGlobal<Input>();
 
         GameState gameState = new()
         {
