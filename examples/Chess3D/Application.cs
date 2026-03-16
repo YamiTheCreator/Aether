@@ -20,7 +20,7 @@ public class Application() : ApplicationBase(
         MaterialSystem materialSystem = new();
         InputSystem inputSystem = new();
         MeshSystem meshSystem = new( WindowBase.Gl );
-        ModelImporterSystem modelImporterSystem = new( textureSystem, meshSystem );
+        ModelSystem modelSystem = new( textureSystem, meshSystem );
 
         Texture2D whiteTexture = textureSystem.CreateTextureFromColor( 1, 1 );
 
@@ -37,7 +37,7 @@ public class Application() : ApplicationBase(
         World.SetGlobal( inputSystem );
         World.SetGlobal( meshSystem );
         World.SetGlobal( materialSystem );
-        World.SetGlobal( modelImporterSystem );
+        World.SetGlobal( modelSystem );
         World.SetGlobal( whiteTexture );
         World.SetGlobal( shader );
         World.SetGlobal( input );
@@ -65,7 +65,7 @@ public class Application() : ApplicationBase(
 
     private void LoadChessModel()
     {
-        ModelImporterSystem modelImporterSystem = World.GetGlobal<ModelImporterSystem>();
+        ModelSystem modelSystem = World.GetGlobal<ModelSystem>();
 
         string projectRoot = "/Users/yami/Documents/RiderProjects/Aether";
         string modelPath = Path.Combine( projectRoot, "src/Graphics/Assets/Models/chess.glb" );
@@ -78,7 +78,7 @@ public class Application() : ApplicationBase(
 
         try
         {
-            List<Entity> entities = modelImporterSystem.LoadModel( World, modelPath );
+            List<Entity> entities = modelSystem.LoadModel( World, modelPath );
             Console.WriteLine( $"Loaded chess model: {entities.Count} meshes" );
         }
         catch ( Exception ex )

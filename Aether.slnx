@@ -1,14 +1,8 @@
 <Solution>
     <Folder Name="/examples/">
-        <Project Path="examples/MemoryTrainer/MemoryTrainer.csproj" />
         <Project Path="examples/Ripple/Ripple.csproj" />
-        <Project Path="examples/Galaxian3D/Galaxian3D.csproj" />
-        <Project Path="examples/Maze/Maze.csproj" />
         <Project Path="examples/Chess3D/Chess3D.csproj" />
-        <Project Path="examples/Asteroids/Asteroids.csproj" />
         <Project Path="examples\Morph\Morph.csproj" />
-        <Project Path="examples\Shapes2D\Shapes2D.csproj" />
-        <Project Path="examples\Shapes3D\Shapes3D.csproj" />
     </Folder>
     <Folder Name="/src/">
         <Project Path="src/Core/Core.csproj" />

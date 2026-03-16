@@ -89,7 +89,7 @@ void main()
     // Базовый цвет материала
     vec3 albedo = uMaterialDiffuse * vColor.rgb;
     if (uHasTexture == 1) {
-        albedo = texture(uTexture, TexCoords).rgb;
+        albedo = texture(uTexture, TexCoords).rgb * vColor.rgb;
     }
 
     // Параметры материала из текстур или констант
